@@ -1,3 +1,5 @@
+from mdp import * 
+
 class Grid(MDP):
     def __init__(self,grid,reward_default=-0.04,y=0.9,noise=0.2):
         states = []
@@ -56,15 +58,3 @@ class Grid(MDP):
                       (move(state,mov[2]),pnook)]
         
         
-        
-# grid1 = [
-#     [' ',' ',' ',+1],
-#     [' ','*',' ',-1],
-#     [' ',' ',' ',' ']
-# ]
-
-#cuad1_MDP=Grid(grid1,y=0.8)
-
-###
-# Ejemplo 2
-###

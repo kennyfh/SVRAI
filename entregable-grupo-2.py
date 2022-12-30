@@ -164,7 +164,7 @@ def iteración_de_políticas(mdp,k):
 
 # que implemente el algoritmo de iteración de valores que se ha explicado en
 # clase, donde mdp es un objeto de la clase MDP definida anteriormente, y
-# epsilon es la cota de error máximo que se permite. Devolver tamto la
+# epsilon es la cota de error máximo que se permite. Devolver tanto la
 # valoración como la política óptima encontrada. 
 
 # Ejemplos:
