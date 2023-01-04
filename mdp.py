@@ -1,19 +1,28 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# ----------------------------------------------------------------------------
+# Module: MDP
+# Created By  : KENNY JESÚS FLORES HUAMÁN
+# version ='1.0'
+# ---------------------------------------------------------------------------
+# A class representing a Markov Decision Process (MDP).
+# ---------------------------------------------------------------------------
+
+# Imports
+from typing import List, Tuple
 import random
 
-"""
-Creación de una clase genérica MDP
-"""
-
 class MDP:
-    def __init__(self, states,y=0.9):
+    def __init__(self, states: List[Tuple], y: float) -> None:
+
         """
-        States: atributo para almacenar una lista con los estados del MDP
+        Initializes the MDP.
+        
+        Args:
+            states (List[Tuple]): a list of tuples representing the states in the MDP.
+            y (float): the discount factor for the MDP.
         """
         self.states = states
-        """
-        y: atributo que almacena el descuento para la valoración
-        de las secuencias de estados
-        """
         self.y=y
     
     def R(self,state):
@@ -40,7 +49,7 @@ class MDP:
 # ALGORITMOS
 # =======
 
-# 1. Algoritmo Iteración de políticas
+
 
 def policy_assessment(P:MDP,pi,n):
     """
@@ -85,7 +94,9 @@ def expected_value(a,state,V,P):
     """
     return sum(p*V[s] for (s,p) in P.T(state,a))
 
-def policy_iteration(P:MDP,k):
+
+# 1. Algoritmo Iteración de políticas
+def policy_iteration(P:MDP,k=100):
     """
     Algoritmo de iteración de políticas
 
