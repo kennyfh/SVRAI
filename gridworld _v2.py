@@ -33,125 +33,75 @@ from tabular_policy import TabularPolicy
 # {"up": "↑", "down": "↓",
 #    "left": "←", "right": "→", "exit": " "}
 
-
 class GridWorld(MDP):
-    TERMINATE = 'end'
-    TERMINAL = ('end', 'end')
-    UP = "UP"
-    DOWN = "DOWN"
-    LEFT = "LEFT"
-    RIGHT = "RIGHT"
-
-    """ Initialization"""
+    # labels for terminate action and terminal state
+    TERMINATE = 'terminate'
+    TERMINAL = ('terminal', 'terminal')
+    LEFT = '\u25C4'
+    UP = '\u25B2'
+    RIGHT = '\u25BA'
+    DOWN = '\u25BC'
 
     def __init__(
         self,
-        noise=0.3,
-        width=10,
-        height=10,
+        noise=0.1,
+        width=4,
+        height=3,
         discount_factor=0.9,
-        blocked_states=[],
+        blocked_states=[(1, 1)],
         action_cost=0.0,
         initial_state=(0, 0),
         goals=None,
-    ) -> None:
-        # Ruido:
+    ):
         self.noise = noise
-        # Dimensiones del grid
         self.width = width
         self.height = height
-        # Factor de descuento y
+        self.blocked_states = blocked_states
         self.discount_factor = discount_factor
-        # Estado inicial
+        self.action_cost = action_cost
         self.initial_state = initial_state
-        # Recompensas
         if goals is None:
-            # Si no existen recompensas dentro de la malla, pondremos 2 recompensas para testear la prueba
             self.goal_states = dict(
                 [((width - 1, height - 1), 1), ((width - 1, height - 2), -1)]
             )
         else:
             self.goal_states = dict(goals)
-        
-        # Movimientos
-        self.movements = {
-            "UP": [(-1, 0), (0, -1), (0, 1)],
-            "DOWN": [(1, 0), (0, -1), (0, 1)],
-            "LEFT": [(0, -1), (-1, 0), (1, 0)],
-            "RIGHT": [(0, 1), (-1, 0), (1, 0)]
-            }
 
-        # Obstáculos: en nuestro problema no tenemos ningún obstáculo, pero podemos añadir algunos por experimentación
-        self.blocked_states = blocked_states
-        # Coste de accion
-        self.action_cost = action_cost
-        super().__init__()
+        # A list of lists thatrecords all rewards given at each step
+        # for each episode of a simulated gridworld
+        self.rewards = []
+        # The rewards for the current episode
+        self.episode_rewards = []
 
-    
+
     def get_states(self):
-        """ Los estados son todas las casillas donde no se encuentran
-        obstáculos"""
         states = [self.TERMINAL]
-        states += [(x, y) for x in range(self.width)
-                   for y in range(self.height) if (x,y) not in self.blocked_states]
+        for x in range(self.width):
+            for y in range(self.height):
+                if not (x, y) in self.blocked_states:
+                    states.append((x, y))
         return states
 
     def get_actions(self, state=None):
-        actions = [self.UP, self.DOWN,self.LEFT, self.RIGHT, self.TERMINATE]
+
+        actions = [self.UP, self.DOWN, self.LEFT, self.RIGHT, self.TERMINATE]
         if state is None:
             return actions
 
         valid_actions = []
-
-        for a in actions:
-            for (new_state, prob) in self.get_transitions(state,a):
-                if prob > 0:
-                    valid_actions.append(a)
+        for action in actions:
+            for (new_state, probability) in self.get_transitions(state, action):
+                if probability > 0:
+                    valid_actions.append(action)
                     break
         return valid_actions
 
+    def get_initial_state(self):
+        self.episode_rewards = []
+        return self.initial_state
 
-    """ Return all non-zero probability transitions for this action
-        from this state, as a list of (state, probability) pairs
-    """
-
-    # def get_transitions(self, state, action):
-    #     def  move(state,m):
-    #         x, y = state
-    #         i, j = m
-    #         nx, ny = x + i, y + j
-    #         if (nx, ny) in self.states:
-    #             return nx, ny
-    #         else:
-    #             return x, y
-
-    #     if state == self.TERMINATE:
-    #         return [(self.TERMINAL, 1.0)] if action == self.TERMINATE else []
-
-    #     transitions = []
-
-    #     if state in self.get_goal_states().keys():
-    #         if action == self.TERMINATE:
-    #             transitions += [(self.TERMINAL, 1.0)]
-        
-    #     else:
-    #         mov = self.movements[action]
-    #         pok = 1 - self.noise
-    #         pnook = self.noise / 2
-    #         transitions += [(move(state, mov[0]), pok),
-    #                         (move(state, mov[1]), pnook),
-    #                         (move(state, mov[2]), pnook)]
-
-    #     # Merge any duplicate outcomes
-    #     merged = defaultdict(lambda: 0.0)
-    #     for (state, probability) in transitions:
-    #         merged[state] = merged[state] + probability
-
-    #     transitions = []
-    #     for outcome in merged.keys():
-    #         transitions += [(outcome, merged[outcome])]
-
-    #     return transitions
+    def get_goal_states(self):
+        return self.goal_states
 
     def valid_add(self, state, new_state, probability):
         # If the next state is blocked, stay in the same state
@@ -217,34 +167,38 @@ class GridWorld(MDP):
 
         return transitions
 
-
-    def get_reward(self, state, action, next_state):
-        """
-        Devuelve una recompensa si el siguiente estado es un terminal y
-        y este estado es una que tiene recompensa
-        """
-        cond = self.get_goal_states().keys() and next_state == self.TERMINAL
-        return self.get_goal_states().get(state) if cond else self.action_cost
-
-    def is_terminal(self, state):
-        if state == self.TERMINAL:
-            # self.rewards += [self.episode_rewards]
-            return True
-        return False
+    def get_reward(self, state, action, new_state):
+        reward = 0.0
+        if state in self.get_goal_states().keys() and new_state == self.TERMINAL:
+            reward = self.get_goal_states().get(state)
+        else:
+            reward = self.action_cost
+        step = len(self.episode_rewards)
+        self.episode_rewards += [reward * (self.discount_factor ** step)]
+        return reward
 
     def get_discount_factor(self):
         return self.discount_factor
 
-    def get_initial_state(self):
-        return self.initial_state
+    def is_terminal(self, state):
+        if state == self.TERMINAL:
+            self.rewards += [self.episode_rewards]
+            return True
+        return False
 
-    def get_goal_states(self):
-        return self.goal_states
+    """
+        Returns a list of lists, which records all rewards given at each step
+        for each episodeof a simulated gridworld
+    """
+
+    def get_rewards(self):
+        return self.rewards
 
 
 if __name__ == "__main__":
-    gridworld = GridWorld(goals=[((9, 8), +10), ((8, 3), +3),
-                   ((4, 5), -5), ((4, 8), -10)])
+    gridworld = GridWorld()
     policy = TabularPolicy(default_action=gridworld.LEFT)
-    vi = PolicyIteration(gridworld, policy).policy_iteration(max_iterations=100)
-    print(vi.policy_table)
+    print(policy.policy_table)
+    PolicyIteration(gridworld, policy).policy_iteration(max_iterations=100)
+    print(policy.policy_table)
+    
