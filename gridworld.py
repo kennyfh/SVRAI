@@ -1,4 +1,3 @@
-
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # ----------------------------------------------------------------------------
@@ -27,6 +26,8 @@
 
 
 from mdp import *
+from policy_iteration import PolicyIteration
+from tabular_policy import TabularPolicy
 
 # {"up": "↑", "down": "↓",
 #    "left": "←", "right": "→", "exit": " "}
@@ -70,66 +71,115 @@ class GridWorld(MDP):
             )
         else:
             self.goal_states = dict(goals)
+        
+        # Movimientos
+        self.movements = {
+            "UP": [(-1, 0), (0, -1), (0, 1)],
+            "DOWN": [(1, 0), (0, -1), (0, 1)],
+            "LEFT": [(0, -1), (-1, 0), (1, 0)],
+            "RIGHT": [(0, 1), (-1, 0), (1, 0)]
+            }
 
         # Obstáculos: en nuestro problema no tenemos ningún obstáculo, pero podemos añadir algunos por experimentación
         self.blocked_states = blocked_states
         # Coste de accion
         self.action_cost = action_cost
-
         super().__init__()
 
-    """ Los estados son todas las casillas donde no se encuentran
-        obstáculos"""
-
+    
     def get_states(self):
+        """ Los estados son todas las casillas donde no se encuentran
+        obstáculos"""
         states = [self.TERMINAL]
         states += [(x, y) for x in range(self.width)
                    for y in range(self.height) if (x,y) not in self.blocked_states]
         return states
 
-    """ Return all actions with non-zero probability from this state """
+    def get_actions(self, state=None):
+        actions = [self.UP, self.DOWN,self.LEFT, self.RIGHT, self.TERMINATE]
+        if state is None:
+            return actions
 
-    def get_actions(self, state):
-        ...
+        valid_actions = []
+
+        for a in actions:
+            for (new_state, prob) in self.get_transitions(state,a):
+                if prob > 0:
+                    valid_actions.append(action)
+                    break
+        return valid_actions
+
 
     """ Return all non-zero probability transitions for this action
         from this state, as a list of (state, probability) pairs
     """
 
     def get_transitions(self, state, action):
-        ...
+        def  move(state,m):
+            x, y = state
+            i, j = m
+            nx, ny = x + i, y + j
+            if (nx, ny) in self.states:
+                return nx, ny
+            else:
+                return x, y
 
-    """ Return the reward for transitioning from state to
-        nextState via action
-    """
+        if state == self.TERMINATE:
+            return [(self.TERMINAL, 1.0)] if action == self.TERMINATE else []
+
+        transitions = []
+
+        if state in self.get_goal_states().keys():
+            if action == self.TERMINATE:
+                transitions += [(self.TERMINAL, 1.0)]
+        
+        else:
+            mov = self.movements[action]
+            pok = 1 - self.noise
+            pnook = self.noise / 2
+            transitions += [(move(state, mov[0]), pok),
+                            (move(state, mov[1]), pnook),
+                            (move(state, mov[2]), pnook)]
+
+        # Merge any duplicate outcomes
+        merged = defaultdict(lambda: 0.0)
+        for (state, probability) in transitions:
+            merged[state] = merged[state] + probability
+
+        transitions = []
+        for outcome in merged.keys():
+            transitions += [(outcome, merged[outcome])]
+
+        return transitions
+
 
     def get_reward(self, state, action, next_state):
-        ...
-
-    """ Return true if and only if state is a terminal state of this MDP """
+        """
+        Devuelve una recompensa si el siguiente estado es un terminal y
+        y este estado es una que tiene recompensa
+        """
+        cond = self.get_goal_states().keys() and next_state == self.TERMINAL
+        return self.get_goal_states().get(state) if cond else self.action_cost
 
     def is_terminal(self, state):
-        ...
-
-    """ Return the discount factor for this MDP """
+        if state == self.TERMINAL:
+            # self.rewards += [self.episode_rewards]
+            return True
+        return False
 
     def get_discount_factor(self):
         return self.discount_factor
 
-    """ Return the initial state of this MDP """
-
     def get_initial_state(self):
-        
         return self.initial_state
-
-    """ Return all goal states of this MDP """
 
     def get_goal_states(self):
         return self.goal_states
 
 
 if __name__ == "__main__":
-    g1 = GridWorld(goals=[((9, 8), +10), ((8, 3), +3),
+    gridworld = GridWorld(goals=[((9, 8), +10), ((8, 3), +3),
                    ((4, 5), -5), ((4, 8), -10)])
-    print(g1.get_states())
-    print("it works")
+    policy = TabularPolicy(default_action=gridworld.LEFT)
+    vi = PolicyIteration(gridworld, policy).policy_iteration(max_iterations=100)
+    print(vi)
