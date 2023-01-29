@@ -1,153 +1,82 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-# ----------------------------------------------------------------------------
-# Module: MDP
-# Created By  : KENNY JESÚS FLORES HUAMÁN
-# version ='1.0'
-# ---------------------------------------------------------------------------
-# A class representing a Markov Decision Process (MDP).
-# ---------------------------------------------------------------------------
+"""
+MARKOV CHAIN CLASS
+"""
 
-# Imports
-from typing import List, Tuple
 import random
 
+
 class MDP:
-    def __init__(self, states: List[Tuple], y: float) -> None:
+    """ Return all states of this MDP """
+    def get_states(self):
+        ...
 
-        """
-        Initializes the MDP.
-        
-        Args:
-            states (List[Tuple]): a list of tuples representing the states in the MDP.
-            y (float): the discount factor for the MDP.
-        """
-        self.states = states
-        self.y=y
-    
-    def R(self,state):
-        """"
-        Método que recibe un estado como entrada y devuelve
-        la recompensa en ese estado
-        """
-        pass
+    """ Return all actions with non-zero probability from this state """
+    def get_actions(self, state):
+        ...
 
-    def A(self,state):
-        """
-        Método que recibe un estado y devuelve una lista de acciones
-        aplicables al estado
-        """
-        pass
-
-    def T(self,state,action):
-        """
-        Método que implementa el modelo de transición
-        """
-        pass
-
-# =======
-# ALGORITMOS
-# =======
-
-
-
-def policy_assessment(P:MDP,pi,n):
+    """ Return all non-zero probability transitions for this action
+        from this state, as a list of (state, probability) pairs
     """
-    Valoración respecto a una política
+    def get_transitions(self, state, action):
+        ...
 
-    Calcula una aproximación a la valoración de los estados
-    respecto a una política pi, aplicando el método iterativo
+    """ Return the reward for transitioning from state to
+        nextState via action
     """
-    R,T, gamma = P.R, P.T, P.y
-    V = {s:0 for s in P.states}
-    for _ in range(n):
-        last_V = V.copy()
-        for e in P.states:
-            V[e] = R(e) + gamma*sum(p*last_V[s] for (s,p) in T(e,pi[e]))
-    return V
+    def get_reward(self, state, action, next_state):
+        ...
 
-def argmax(seq,f):
+    """ Return true if and only if state is a terminal state of this MDP """
+    def is_terminal(self, state):
+        ...
+
+    """ Return the discount factor for this MDP """
+    def get_discount_factor(self):
+        ...
+
+    """ Return the initial state of this MDP """
+    def get_initial_state(self):
+        ...
+
+    """ Return all goal states of this MDP """
+    def get_goal_states(self):
+        ...
+
+
+    """ Return a new state and a reward for executing action in state,
+    based on the underlying probability. This can be used for
+    model-free learning methods, but requires a model to operate.
+    Override for simulation-based learning
     """
-    Función auxiliar para poder obtener el argumento máximo
-    sobre unas secuencia de elementos.
 
-    TODO: Podría mejorarse realizando esto
-    https://stackoverflow.com/questions/5098580/implementing-argmax-in-python"""
-    maxi = float("-inf")
-    amax = None
-    for x in seq:
-        fx = f(x)
-        if fx > maxi:
-            maxi = fx
-            amax = x
-    return amax
+    def execute(self, state, action):
+        rand = random.random()
+        cumulative_probability = 0.0
+        for (new_state, probability) in self.get_transitions(state, action):
+            if cumulative_probability <= rand <= probability + cumulative_probability:
+                return (new_state, self.get_reward(state, action, new_state))
+            cumulative_probability += probability
+            if cumulative_probability >= 1.0:
+                raise (
+                    "Cumulative probability >= 1.0 for action "
+                    + str(action)
+                    + " from "
+                    + str(state)
+                )
 
-def expected_value(a,state,V,P):
-    """
-        Valoración esperada 
+        raise (
+            "No outcome state in simulation for action"
+            + str(action)
+            + " from "
+            + str(state)
+        )
 
-        Encuentra la valoración esperada de una acción respecto
-        de una función de valoración V
+    """ Execute a policy on this mdp for a number of episodes """
 
-        \sum_s P(s|e,a)*V(s)
-    
-    """
-    return sum(p*V[s] for (s,p) in P.T(state,a))
-
-
-# 1. Algoritmo Iteración de políticas
-def policy_iteration(P:MDP,k=100):
-    """
-    Algoritmo de iteración de políticas
-
-    """
-    V = {e:0 for e in P.states}
-    pi = {e:random.choice(P.A(e)) for e in P.states}
-    while True:
-        V = policy_assessment(P,pi,k)
-        update=False
-        for s in P.states:
-            acc=argmax(P.A(s), lambda a : expected_value(a,s,V,P))
-            if(acc!=pi[s] and expected_value(acc,s,V,P)>expected_value(pi[s],s,V,P)):
-                pi[s] =acc
-                update=True
-        if not update:
-            return pi,V
-
-# 2º Algoritmo de iteración de valores
-
-def value_iteration(P:MDP,epsilon:float=0.0001):
-    """
-    Algoritmo de iteración de valores
-
-    P: Problema MDP
-    epsilon: cota de error máximo que se permite
-
-    """
-    # Sea V una función sobre los estados, con valor 0
-    # para cada estado que tengamos
-    V = {s:0 for s in P.states} # Vo
-    delta = float("inf")
-    R, gamma = P.R, P.y  # γ
-    # Repetir
-    while True:
-        V_last = V.copy() # Vi-1
-        delta = 0
-        # Para cada estado s
-        for s in P.states:
-            V[s] = R(s) + gamma * max(expected_value(a,s,V_last,P) for a in P.A(s))
-
-            # Si  |Vi (s) − Vi−1(s)| > δ
-            error = abs(V[s] - V_last[s])
-            if error > delta:
-                delta = error
-        # Hasta que se supere la cota de error máximo que se permite
-        #  δ < epsilon · (1 − γ)/γ
-        if delta < epsilon * (1-gamma) / gamma:
-            break
-
-    # Calculamos π*
-    policy = {s:argmax(P.A(s),lambda a : expected_value(a,s,V,P) ) for s in P.states}
-
-    return policy,V
-
+    def execute_policy(self, policy, episodes=100):
+        for _ in range(episodes):
+            state = self.get_initial_state()
+            while not self.is_terminal(state):
+                action = policy.select_action(state)
+                (next_state, reward) = self.execute(state, action)
+                state = next_state

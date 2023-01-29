@@ -2,7 +2,6 @@
 Busqueda clásica como MDP
 """
 
-
 # Clase Search
 
 class search(object):
