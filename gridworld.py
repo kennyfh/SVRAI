@@ -144,14 +144,14 @@ class GridWorld(MDP):
                             self.valid_add(state, mov[1], self.noise),
                             self.valid_add(state, mov[2], self.noise)]
 
-        # Fusionar algún duplicado
-        merged = defaultdict(lambda: 0.0)
-        for (state, probability) in transitions:
-            merged[state] = merged[state] + probability
+        # # Fusionar algún duplicado
+        # merged = defaultdict(lambda: 0.0)
+        # for (state, probability) in transitions:
+        #     merged[state] = merged[state] + probability
 
-        transitions = []
-        for outcome in merged.keys():
-            transitions += [(outcome, merged[outcome])]
+        # transitions = []
+        # for outcome in merged.keys():
+        #     transitions += [(outcome, merged[outcome])]
 
         return transitions
 
@@ -185,7 +185,7 @@ class GridWorld(MDP):
                     self.LEFT: "←", self.RIGHT: "→", self.TERMINATE: " "}
         policy_dict = policy.policy_table
         # lv = "-"*(self.width*5+2)+"\n"
-        print(lv)
+        # print(lv)
         # Por cada elemento del grid
         for y in range(self.height - 1, -1, -1):
             for x in range(self.width):
