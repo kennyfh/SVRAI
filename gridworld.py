@@ -35,8 +35,8 @@ from tabular_policy import TabularPolicy
 
 
 class GridWorld(MDP):
-    TERMINATE = 'end'
-    TERMINAL = ('end', 'end')
+    TERMINATE = 'terminate'
+    TERMINAL = ('terminal', 'terminal')
     UP = "UP"
     DOWN = "DOWN"
     LEFT = "LEFT"
@@ -221,16 +221,16 @@ class GridWorld(MDP):
     def get_reward(self, state, action, next_state):
         """
         Devuelve una recompensa si el siguiente estado es un terminal y
-        y este estado es una que tiene recompensa
+        y este estado es una que tiene recompensa. Si no, devuelve el coste de acción que hayamos realizado
         """
-        cond = self.get_goal_states().keys() and next_state == self.TERMINAL
-        return self.get_goal_states().get(state) if cond else self.action_cost
+        if state in self.get_goal_states().keys() and next_state == self.TERMINAL:
+            reward = self.get_goal_states().get(state)
+        else:
+            reward = self.action_cost
+        return reward
 
-    def is_terminal(self, state):
-        if state == self.TERMINAL:
-            # self.rewards += [self.episode_rewards]
-            return True
-        return False
+    def is_terminal(self, state) -> bool:
+        return True if state==self.TERMINAL else False
 
     def get_discount_factor(self):
         return self.discount_factor
@@ -241,10 +241,36 @@ class GridWorld(MDP):
     def get_goal_states(self):
         return self.goal_states
 
+    def policy_to_string(self, policy):
+        result= " "
+        mov = {self.UP: "↑", self.DOWN: "↓",
+                    self.LEFT: "←", self.RIGHT: "→", self.TERMINATE: " "}
+        policy_dict = policy.policy_table
+        #print(movements)
+        # Por cada elemento del grid
+        for y in range(self.height - 1, -1, -1):
+            for x in range(self.width):
+                # Si el elemento es un obstáculo
+                if (x,y) in self.blocked_states:
+                    result += " | ##"
+                # Si el elemento es una recompensa
+                elif policy.select_action((x, y)) == self.TERMINATE:
+                    result += f" | {self.goal_states[(x, y)]} "
+                # Si es otro sitio
+                else:
+                    result += " |  " + mov[policy.select_action((x, y))] + " "
+            result += "\n"
+        return result
 
 if __name__ == "__main__":
-    gridworld = GridWorld(goals=[((9, 8), +10), ((8, 3), +3),
-                   ((4, 5), -5), ((4, 8), -10)])
+    # gridworld = GridWorld(goals=[((9, 8), +10), ((8, 3), +3),
+    #                ((4, 5), -5), ((4, 8), -10)])
+    # policy = TabularPolicy(default_action=gridworld.UP)
+    # PolicyIteration(gridworld, policy).policy_iteration(max_iterations=100)
+    # print(gridworld.policy_to_string(policy))
+    gridworld = GridWorld(width=4,height=3,noise=0.1,blocked_states=[(1, 1)])
     policy = TabularPolicy(default_action=gridworld.LEFT)
-    vi = PolicyIteration(gridworld, policy).policy_iteration(max_iterations=100)
-    print(vi.policy_table)
+    print(policy.policy_table)
+    PolicyIteration(gridworld, policy).policy_iteration(max_iterations=100)
+    print(gridworld.policy_to_string(policy))
+    
