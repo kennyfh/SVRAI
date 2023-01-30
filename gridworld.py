@@ -30,10 +30,6 @@ from mdp import *
 from policy_iteration import PolicyIteration
 from tabular_policy import TabularPolicy
 
-# {"up": "↑", "down": "↓",
-#    "left": "←", "right": "→", "exit": " "}
-
-
 class GridWorld(MDP):
     TERMINATE = 'terminate'
     TERMINAL = ('terminal', 'terminal')
@@ -73,15 +69,7 @@ class GridWorld(MDP):
         else:
             self.goal_states = dict(goals)
         
-        # Movimientos
-        self.movements = {
-            "UP": [(-1, 0), (0, -1), (0, 1)],
-            "DOWN": [(1, 0), (0, -1), (0, 1)],
-            "LEFT": [(0, -1), (-1, 0), (1, 0)],
-            "RIGHT": [(0, 1), (-1, 0), (1, 0)]
-            }
-
-        # Obstáculos: en nuestro problema no tenemos ningún obstáculo, pero podemos añadir algunos por experimentación
+                # Obstáculos: en nuestro problema no tenemos ningún obstáculo, pero podemos añadir algunos por experimentación
         self.blocked_states = blocked_states
         # Coste de accion
         self.action_cost = action_cost
@@ -100,9 +88,7 @@ class GridWorld(MDP):
         actions = [self.UP, self.DOWN,self.LEFT, self.RIGHT, self.TERMINATE]
         if state is None:
             return actions
-
         valid_actions = []
-
         for a in actions:
             for (new_state, prob) in self.get_transitions(state,a):
                 if prob > 0:
@@ -114,60 +100,21 @@ class GridWorld(MDP):
     """ Return all non-zero probability transitions for this action
         from this state, as a list of (state, probability) pairs
     """
-
-    # def get_transitions(self, state, action):
-    #     def  move(state,m):
-    #         x, y = state
-    #         i, j = m
-    #         nx, ny = x + i, y + j
-    #         if (nx, ny) in self.states:
-    #             return nx, ny
-    #         else:
-    #             return x, y
-
-    #     if state == self.TERMINATE:
-    #         return [(self.TERMINAL, 1.0)] if action == self.TERMINATE else []
-
-    #     transitions = []
-
-    #     if state in self.get_goal_states().keys():
-    #         if action == self.TERMINATE:
-    #             transitions += [(self.TERMINAL, 1.0)]
-        
-    #     else:
-    #         mov = self.movements[action]
-    #         pok = 1 - self.noise
-    #         pnook = self.noise / 2
-    #         transitions += [(move(state, mov[0]), pok),
-    #                         (move(state, mov[1]), pnook),
-    #                         (move(state, mov[2]), pnook)]
-
-    #     # Merge any duplicate outcomes
-    #     merged = defaultdict(lambda: 0.0)
-    #     for (state, probability) in transitions:
-    #         merged[state] = merged[state] + probability
-
-    #     transitions = []
-    #     for outcome in merged.keys():
-    #         transitions += [(outcome, merged[outcome])]
-
-    #     return transitions
-
     def valid_add(self, state, new_state, probability):
         # If the next state is blocked, stay in the same state
         if probability == 0.0:
-            return []
+            return ()
 
         if new_state in self.blocked_states:
-            return [(state, probability)]
+            return (state, probability)
 
         # Move to the next space if it is not off the grid
         (x, y) = new_state
         if x >= 0 and x < self.width and y >= 0 and y < self.height:
-            return [((x, y), probability)]
+            return ((x, y), probability)
 
         # If off the grid, state in the same state
-        return [(state, probability)]
+        return (state, probability)
 
     def get_transitions(self, state, action):
         transitions = []
@@ -182,31 +129,22 @@ class GridWorld(MDP):
         straight = 1 - (2 * self.noise)
 
         (x, y) = state
+        movements = {
+            "UP": [(x, y+1), (x-1, y), (x+1, y)],
+            "DOWN": [(x, y-1), (x-1,y), (x+1, y)],
+            "LEFT": [(x-1,y), (x, y-1), (x, y+1)],
+            "RIGHT": [(x+1, y), (x, y-1), (x, y+1)]
+            }
         if state in self.get_goal_states().keys():
             if action == self.TERMINATE:
                 transitions += [(self.TERMINAL, 1.0)]
+        elif action==self.UP or action ==self.DOWN or action==self.LEFT or action==self.RIGHT:
+            mov =  movements[action]
+            transitions += [self.valid_add(state, mov[0], straight),
+                            self.valid_add(state, mov[1], self.noise),
+                            self.valid_add(state, mov[2], self.noise)]
 
-        elif action == self.UP:
-            transitions += self.valid_add(state, (x, y + 1), straight)
-            transitions += self.valid_add(state, (x - 1, y), self.noise)
-            transitions += self.valid_add(state, (x + 1, y), self.noise)
-
-        elif action == self.DOWN:
-            transitions += self.valid_add(state, (x, y - 1), straight)
-            transitions += self.valid_add(state, (x - 1, y), self.noise)
-            transitions += self.valid_add(state, (x + 1, y), self.noise)
-
-        elif action == self.RIGHT:
-            transitions += self.valid_add(state, (x + 1, y), straight)
-            transitions += self.valid_add(state, (x, y - 1), self.noise)
-            transitions += self.valid_add(state, (x, y + 1), self.noise)
-
-        elif action == self.LEFT:
-            transitions += self.valid_add(state, (x - 1, y), straight)
-            transitions += self.valid_add(state, (x, y - 1), self.noise)
-            transitions += self.valid_add(state, (x, y + 1), self.noise)
-
-        # Merge any duplicate outcomes
+        # Fusionar algún duplicado
         merged = defaultdict(lambda: 0.0)
         for (state, probability) in transitions:
             merged[state] = merged[state] + probability
@@ -246,7 +184,8 @@ class GridWorld(MDP):
         mov = {self.UP: "↑", self.DOWN: "↓",
                     self.LEFT: "←", self.RIGHT: "→", self.TERMINATE: " "}
         policy_dict = policy.policy_table
-        #print(movements)
+        # lv = "-"*(self.width*5+2)+"\n"
+        print(lv)
         # Por cada elemento del grid
         for y in range(self.height - 1, -1, -1):
             for x in range(self.width):
