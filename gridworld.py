@@ -161,6 +161,7 @@ class GridWorld(MDP):
         Devuelve una recompensa si el siguiente estado es un terminal y
         y este estado es una que tiene recompensa. Si no, devuelve el coste de acción que hayamos realizado
         """
+        reward = 0.
         if state in self.get_goal_states().keys() and next_state == self.TERMINAL:
             reward = self.get_goal_states().get(state)
         else:
