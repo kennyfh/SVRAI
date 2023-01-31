@@ -38,11 +38,9 @@ class VehicleSlopeV2(MDP):
 
     def __init__(self,
                  discount_factor=0.8,
-                 energy=50,
                  initial_state="LOW"
                  ) -> None:
         self.discount_factor = discount_factor
-        self.energy = energy
         self.initial_state = initial_state
 
         self.transitions_dict = {
@@ -77,7 +75,7 @@ class VehicleSlopeV2(MDP):
     def get_reward(self, state, action, next_state):
         reward = 0.
         if state == self.TOP and next_state == self.TOP:
-            reward = 10
+            reward = 100
         else:
             reward = -1 if action == self.SPIN_LOW else -2
         return reward
@@ -98,8 +96,7 @@ class VehicleSlopeV2(MDP):
 if __name__ == "__main__":
     print("prueba")
     vehicle = VehicleSlopeV2()
-    # print(vehicle.transitions_dict)
-    policy = TabularPolicy(default_action=vehicle.SPIN_FAST)
+    policy = TabularPolicy(default_action=vehicle.SPIN_LOW)
     print(policy.policy_table)
     PolicyIteration(vehicle, policy).policy_iteration(max_iterations=100)
     print(policy.policy_table)

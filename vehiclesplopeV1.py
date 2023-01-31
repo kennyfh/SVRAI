@@ -21,28 +21,47 @@ from mdp import *
 
 
 class VehicleSlopeV1(MDP):
+    #States
     LOW = "LOW"
     MEDIUM = "MEDIUM"
     HIGH = "HIGH"
+    # Actions
+    SPIN = "SPIN"
+    NOT_SPIN = "NOT_SPIN"
 
     def __init__(self,
-                discount_factor=0.8,
-                energy=50
-                )
+                discount_factor=0.8
+                )-> None:
+        self.discount_factor = discount_factor
+        self.transitions_dict = {
+            (self.LOW,self.SPIN):[(self.MEDIUM, 1)],
+            (self.LOW,self.NOT_SPIN):[(self.LOW, 1)],
+            (self.MEDIUM,self.SPIN):[(self.HIGH, 1)],
+            (self.MEDIUM,self.NOT_SPIN):[(self.LOW, 1)],
+            (self.HIGH,self.SPIN):[(self.HIGH, 1)],
+            (self.HIGH,self.NOT_SPIN):[(self.MEDIUM, 1)]
+        }
+                
 
 
     def get_states(self):
-        return ["low","medium","high"]
+        return [self.LOW, self.MEDIUM, self.HIGH, self.TOP]
 
-    def get_actions(self, state):
-        return []
+    def get_actions(self, state=None):
+        actions = [self.SPIN,self.NOT_SPIN]
+        if state is None:
+            return actions
+        valid_actions =[]
+        for a in actions:
+            for (_,prob) in self.get_transitions(state,a):
+                if prob > 0:
+                    valid_actions.append(a)
+                    break
+        return valid_actions
 
     def get_transitions(self, state, action):
-        ...
+        return self.transitions_dict[(state,action)]
 
-    """ Return the reward for transitioning from state to
-        nextState via action
-    """
     def get_reward(self, state, action, next_state):
         ...
 
@@ -52,7 +71,7 @@ class VehicleSlopeV1(MDP):
 
     """ Return the discount factor for this MDP """
     def get_discount_factor(self):
-        ...
+        return self.discount_factor
 
     """ Return the initial state of this MDP """
     def get_initial_state(self):
