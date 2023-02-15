@@ -29,6 +29,9 @@ from collections import defaultdict
 from mdp import *
 from policy_iteration import PolicyIteration
 from tabular_policy import TabularPolicy
+from qtable import QTable
+from qlearning import QLearning
+from multi_armed_bandit import EpsilonGreedy
 
 class GridWorld(MDP):
     TERMINATE = 'terminate'
@@ -69,7 +72,7 @@ class GridWorld(MDP):
         else:
             self.goal_states = dict(goals)
         
-                # Obstáculos: en nuestro problema no tenemos ningún obstáculo, pero podemos añadir algunos por experimentación
+        # Obstáculos: en nuestro problema no tenemos ningún obstáculo, pero podemos añadir algunos por experimentación
         self.blocked_states = blocked_states
         # Coste de accion
         self.action_cost = action_cost
@@ -199,15 +202,28 @@ class GridWorld(MDP):
             result += "\n"
         return result
 
+    def execute(self, state, action):
+        # If we are in a goal state then terminate automatically execute
+        # a terminate action to immediately terminate
+        if state in self.goal_states:
+            return MDP.execute(self, state=state, action=self.TERMINATE)
+        return super().execute(state, action)
+
 if __name__ == "__main__":
-    gridworld = GridWorld(goals=[((9, 8), +10), ((8, 3), +3),
-                   ((4, 5), -5), ((4, 8), -10)])
-    policy = TabularPolicy(default_action=gridworld.UP)
-    PolicyIteration(gridworld, policy).policy_iteration(max_iterations=100)
-    print(gridworld.policy_to_string(policy))
+    # gridworld = GridWorld(goals=[((9, 8), +10), ((8, 3), +3),
+    #                ((4, 5), -5), ((4, 8), -10)])
+    # policy = TabularPolicy(default_action=gridworld.UP)
+    # PolicyIteration(gridworld, policy).policy_iteration(max_iterations=100)
+    # print(gridworld.policy_to_string(policy))
     # gridworld = GridWorld(width=4,height=3,noise=0.1,blocked_states=[(1, 1)])
     # policy = TabularPolicy(default_action=gridworld.LEFT)
     # print(policy.policy_table)
     # PolicyIteration(gridworld, policy).policy_iteration(max_iterations=100)
     # print(gridworld.policy_to_string(policy))
-    
+
+    gridworld = GridWorld(width=4,height=3,noise=0.1,blocked_states=[(1, 1)])
+    qfunction = QTable()
+    QLearning(gridworld, EpsilonGreedy(), qfunction).execute(episodes=100)
+    policy = qfunction.extract_policy(gridworld)
+    print(gridworld.policy_to_string(policy))    
+

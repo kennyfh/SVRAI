@@ -41,3 +41,26 @@ class MDP:
     """ Return all goal states of this MDP """
     def get_goal_states(self):
         ...
+
+
+    def execute(self, state, action):
+        rand = random.random()
+        cumulative_probability = 0.0
+        for (new_state, probability) in self.get_transitions(state, action):
+            if cumulative_probability <= rand <= probability + cumulative_probability:
+                return (new_state, self.get_reward(state, action, new_state))
+            cumulative_probability += probability
+            if cumulative_probability >= 1.0:
+                raise (
+                    "Cumulative probability >= 1.0 for action "
+                    + str(action)
+                    + " from "
+                    + str(state)
+                )
+
+        raise (
+            "No outcome state in simulation for action"
+            + str(action)
+            + " from "
+            + str(state)
+        )

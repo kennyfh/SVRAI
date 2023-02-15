@@ -11,3 +11,7 @@ class QTable(QFunction):
 
     def get_q_value(self, state, action):
         return self.qtable[(state, action)]
+
+
+
+
