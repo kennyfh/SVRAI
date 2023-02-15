@@ -180,14 +180,11 @@ class GridWorld(MDP):
     def get_goal_states(self):
         return self.goal_states
 
-    def policy_to_string(self, policy):
-        result= " "
+    def policy_to_string(self, policy:TabularPolicy) -> str:        
+        result= "\n "
         mov = {self.UP: "↑", self.DOWN: "↓",
                     self.LEFT: "←", self.RIGHT: "→", self.TERMINATE: " "}
-        policy_dict = policy.policy_table
-        # lv = "-"*(self.width*5+2)+"\n"
-        # print(lv)
-        # Por cada elemento del grid
+        # policy_dict = policy.policy_table
         for y in range(self.height - 1, -1, -1):
             for x in range(self.width):
                 # Si el elemento es un obstáculo
@@ -203,14 +200,14 @@ class GridWorld(MDP):
         return result
 
 if __name__ == "__main__":
-    # gridworld = GridWorld(goals=[((9, 8), +10), ((8, 3), +3),
-    #                ((4, 5), -5), ((4, 8), -10)])
-    # policy = TabularPolicy(default_action=gridworld.UP)
-    # PolicyIteration(gridworld, policy).policy_iteration(max_iterations=100)
-    # print(gridworld.policy_to_string(policy))
-    gridworld = GridWorld(width=4,height=3,noise=0.1,blocked_states=[(1, 1)])
-    policy = TabularPolicy(default_action=gridworld.LEFT)
-    print(policy.policy_table)
+    gridworld = GridWorld(goals=[((9, 8), +10), ((8, 3), +3),
+                   ((4, 5), -5), ((4, 8), -10)])
+    policy = TabularPolicy(default_action=gridworld.UP)
     PolicyIteration(gridworld, policy).policy_iteration(max_iterations=100)
     print(gridworld.policy_to_string(policy))
+    # gridworld = GridWorld(width=4,height=3,noise=0.1,blocked_states=[(1, 1)])
+    # policy = TabularPolicy(default_action=gridworld.LEFT)
+    # print(policy.policy_table)
+    # PolicyIteration(gridworld, policy).policy_iteration(max_iterations=100)
+    # print(gridworld.policy_to_string(policy))
     
