@@ -203,8 +203,6 @@ class GridWorld(MDP):
         return result
 
     def execute(self, state, action):
-        # If we are in a goal state then terminate automatically execute
-        # a terminate action to immediately terminate
         if state in self.goal_states:
             return MDP.execute(self, state=state, action=self.TERMINATE)
         return super().execute(state, action)
@@ -215,6 +213,8 @@ if __name__ == "__main__":
     # policy = TabularPolicy(default_action=gridworld.UP)
     # PolicyIteration(gridworld, policy).policy_iteration(max_iterations=100)
     # print(gridworld.policy_to_string(policy))
+
+
     # gridworld = GridWorld(width=4,height=3,noise=0.1,blocked_states=[(1, 1)])
     # policy = TabularPolicy(default_action=gridworld.LEFT)
     # print(policy.policy_table)

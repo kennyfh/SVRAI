@@ -9,7 +9,6 @@ class search(object):
     def __init__(self,states):
         self.states = states
 
-
     def A(self,state):
         pass
 

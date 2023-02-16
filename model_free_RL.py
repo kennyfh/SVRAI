@@ -15,7 +15,6 @@ class ModelFreeRL:
         self.qfunction = qfunction
 
     def execute(self, episodes=100) -> None:
-
         for _ in range(episodes):
             state = self.mdp.get_initial_state()
             actions = self.mdp.get_actions(state)
