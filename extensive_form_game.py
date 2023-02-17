@@ -1,25 +1,25 @@
 class ExtensiveFormGame:
 
     ''' Get the list of players for this game as a list [1, ..., N] '''
-    def get_players(self): abstract
+    def get_players(self): ...
 
     ''' Get the valid actions at a state '''
-    def get_actions(self, state): abstract
+    def get_actions(self, state): ...
 
     ''' Return the state resulting from playing an action in a state '''
-    def get_transition(self, state, action): abstract
+    def get_transition(self, state, action): ...
 
     ''' Return the reward for a state, return as a dictionary mapping players to rewards '''
-    def get_reward(self, state, action, next_state): abstract
+    def get_reward(self, state, action, next_state): ...
 
     ''' Return true if and only if state is a terminal state of this game '''
-    def is_terminal(self, state): abstract
+    def is_terminal(self, state): ...
 
     ''' Return the player who selects the action at this state (whose turn it is) '''
-    def get_player_turn(self, state): abstract
+    def get_player_turn(self, state): ...
 
     ''' Return the initial state of this game '''
-    def get_initial_state(self): abstract
+    def get_initial_state(self): ...
 
     ''' Return a game tree for this game '''
     def game_tree(self):
