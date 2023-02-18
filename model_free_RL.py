@@ -3,6 +3,8 @@
 CLASE QUE IMPLEMENTA LOS ELEMENTOS NECESARIOS PARA QUE UN ALGORITMO SEA LIBRE DE MODELO
 """
 
+from tqdm import tqdm
+
 class ModelFreeRL:
     def __init__(self, 
                  mdp, 
@@ -15,7 +17,8 @@ class ModelFreeRL:
         self.qfunction = qfunction
 
     def execute(self, episodes=100) -> None:
-        for _ in range(episodes):
+
+        for _ in tqdm(range(episodes), desc="Episodes"):
             state = self.mdp.get_initial_state()
             actions = self.mdp.get_actions(state)
             action = self.bandit.select(state, actions, self.qfunction)
