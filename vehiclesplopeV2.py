@@ -21,6 +21,8 @@
 from mdp import *
 from policy_iteration import PolicyIteration
 from tabular_policy import TabularPolicy
+from tabular_value_function import TabularValueFunction
+from value_iteration import ValueIteration
 
 # Estados: bajo, medio, alto y superior
 # Estado final: cuando llegue al superior que será la cima
@@ -94,9 +96,10 @@ class VehicleSlopeV2(MDP):
 
 
 if __name__ == "__main__":
-    print("prueba")
-    vehicle = VehicleSlopeV2()
-    policy = TabularPolicy(default_action=vehicle.SPIN_LOW)
-    print(policy.policy_table)
-    PolicyIteration(vehicle, policy).policy_iteration(max_iterations=100)
+    vehicle = VehicleSlopeV2(discount_factor=1)
+    
+    # Iteración de valores
+    values = TabularValueFunction()
+    ValueIteration(vehicle, values).value_iteration(max_iterations=10000)
+    policy = values.extract_policy(vehicle)
     print(policy.policy_table)

@@ -31,7 +31,12 @@ from policy_iteration import PolicyIteration
 from tabular_policy import TabularPolicy
 from qtable import QTable
 from qlearning import QLearning
+from sarsa import SARSA
 from multi_armed_bandit import EpsilonGreedy
+import random
+
+from tabular_value_function import TabularValueFunction
+from value_iteration import ValueIteration
 
 class GridWorld(MDP):
     TERMINATE = 'terminate'
@@ -140,13 +145,17 @@ class GridWorld(MDP):
             }
         if state in self.get_goal_states().keys():
             if action == self.TERMINATE:
-                transitions += [(self.TERMINAL, 1.0)]
+                # transitions += [(self.TERMINAL, 1.0)]
+                transitions += [random.choice([(self.TERMINAL, 1.0),
+                                               ((0,0), 1.0),((self.width-1,0), 1.0), ((self.width-1,0), 1.0)
+                                               ,((0,self.height-1), 1.0),
+                                               ((self.width-1, self.height-1), 1.0)])]
         elif action==self.UP or action ==self.DOWN or action==self.LEFT or action==self.RIGHT:
             mov =  movements[action]
             transitions += [self.valid_add(state, mov[0], straight),
                             self.valid_add(state, mov[1], self.noise),
                             self.valid_add(state, mov[2], self.noise)]
-
+            
         # # Fusionar algún duplicado
         # merged = defaultdict(lambda: 0.0)
         # for (state, probability) in transitions:
@@ -208,22 +217,28 @@ class GridWorld(MDP):
         return super().execute(state, action)
 
 if __name__ == "__main__":
-    # gridworld = GridWorld(goals=[((9, 8), +10), ((8, 3), +3),
-    #                ((4, 5), -5), ((4, 8), -10)])
+    gridworld = GridWorld(goals=[((9, 8), +10), ((8, 3), +3),
+                    ((4, 5), -5), ((4, 8), -10)])
+    # Policy iteration
     # policy = TabularPolicy(default_action=gridworld.UP)
     # PolicyIteration(gridworld, policy).policy_iteration(max_iterations=100)
     # print(gridworld.policy_to_string(policy))
 
-
-    # gridworld = GridWorld(width=4,height=3,noise=0.1,blocked_states=[(1, 1)])
-    # policy = TabularPolicy(default_action=gridworld.LEFT)
-    # print(policy.policy_table)
-    # PolicyIteration(gridworld, policy).policy_iteration(max_iterations=100)
+    # Value iteration
+    # values = TabularValueFunction()
+    # ValueIteration(gridworld, values).value_iteration(max_iterations=10000)
+    # policy = values.extract_policy(gridworld)
     # print(gridworld.policy_to_string(policy))
 
-    gridworld = GridWorld(width=4,height=3,noise=0.1,blocked_states=[(1, 1)])
+    # Q-Learning 
+    # qfunction = QTable()
+    # QLearning(gridworld, EpsilonGreedy(), qfunction).execute(episodes=1000)
+    # policy = qfunction.extract_policy(gridworld)
+    # print(gridworld.policy_to_string(policy))    
+
+    # Sarsa
     qfunction = QTable()
-    QLearning(gridworld, EpsilonGreedy(), qfunction).execute(episodes=100)
+    SARSA(gridworld, EpsilonGreedy(), qfunction).execute(episodes=3000)
     policy = qfunction.extract_policy(gridworld)
-    print(gridworld.policy_to_string(policy))    
+    print(gridworld.policy_to_string(policy)) 
 
