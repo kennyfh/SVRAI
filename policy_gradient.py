@@ -1,6 +1,9 @@
 """
 POLICY GRADIENT 
 """
+from tqdm import tqdm
+
+
 class PolicyGradient:
     def __init__(self, mdp, policy, alpha) -> None:
         super().__init__()
@@ -11,7 +14,7 @@ class PolicyGradient:
     """ Generate and store an entire episode trajectory to use to update the policy """
 
     def execute(self, episodes=100):
-        for _ in range(episodes):
+        for _ in tqdm(range(episodes), desc="Episodes"):
             actions = []
             states = []
             rewards = []
