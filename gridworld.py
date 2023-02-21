@@ -39,6 +39,7 @@ from qlearning import QLearning
 from sarsa import SARSA
 from multi_armed_bandit import EpsilonGreedy
 import random
+import math
 
 from tabular_value_function import TabularValueFunction
 from value_iteration import ValueIteration
@@ -260,18 +261,20 @@ class GridWorld(MDP):
 
         
     def visualise_policy(self,policy) -> None:
+        mov = {self.UP: "↑", self.DOWN: "↓",
+                    self.LEFT: "←", self.RIGHT: "→", self.TERMINATE: " "}
         if self.pygame_installed:
             pygame.init()
             screen = pygame.display.set_mode((500, 500))
             def draw_grid():
-                for y in range(self.height - 1, -1, -1):
-                    for x in range(self.width):
+                for x in range(self.width):
+                    for y in range(self.height):
                         if (x,y) in self.goal_states and self.goal_states[(x,y)] >0:
-                            self.draw_cell(screen,y, x, GREEN, "")
+                            self.draw_cell(screen, x,abs(9-y), GREEN, str(self.goal_states[(x, y)]))
                         elif (x,y) in self.goal_states and self.goal_states[(x,y)] <0:
-                            self.draw_cell(screen,y, x, RED, "")
+                            self.draw_cell(screen,x,abs(9-y), RED, str(self.goal_states[(x, y)]))
                         else:
-                            self.draw_cell(screen,y,x,WHITE," ")
+                            self.draw_cell(screen,x,abs(9-y),WHITE,str(mov[policy.select_action((x, y))]))
 
             draw_grid()
 
@@ -318,7 +321,7 @@ if __name__ == "__main__":
     gridworld = GridWorld(goals=[((8, 2), +10), ((7, 7), +3),
                     ((3, 5), -5), ((3, 2), -10)])
     # gridworld = GridWorld(width=4,height=3,noise=0.1,blocked_states=[(1, 1)])
-    gridworld.visualise_initial_state()
+    # gridworld.visualise_initial_state()
 
     # Policy iteration
     # policy = TabularPolicy(default_action=gridworld.UP)
@@ -338,8 +341,8 @@ if __name__ == "__main__":
     QLearning(gridworld, EpsilonGreedy(), qfunction).execute(episodes=2000)
     policy = qfunction.extract_policy(gridworld)
     print(policy.policy_table)
-    print(gridworld.policy_to_string(policy))    
-    # gridworld.visualise_policy(policy)
+    # print(gridworld.policy_to_string(policy))    
+    gridworld.visualise_policy(policy)
 
 
     # Sarsa
