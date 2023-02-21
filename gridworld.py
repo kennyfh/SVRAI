@@ -27,6 +27,7 @@
 
 from collections import defaultdict
 import sys
+import numpy as np
 
 import pygame
 
@@ -209,13 +210,38 @@ class GridWorld(MDP):
         except ModuleNotFoundError:
             return False
         
-    def visualise_policy(self,policy) -> None:
+    def visualise_initial_state(self) -> None:
         if self.pygame_installed:
             pygame.init()
             screen = pygame.display.set_mode((500, 500))
+            pygame.display.set_caption(f"GridWorld {self.width}x{self.height} (estado inicial)")
+
+            mat = np.zeros((10,10))
+            for x,y in self.goal_states.items():
+                 mat[x[0],x[1]]=y
+            mat = np.fliplr(mat)
+
+            for x in range(mat.shape[0]):
+                for y in range(mat.shape[1]):
+                    if mat[x,y] > 0:
+                        self.draw_cell(screen,x,y,GREEN, str(mat[x,y]))
+                    elif mat[x,y] < 0:
+                        self.draw_cell(screen,x,y,RED, str(mat[x,y]))
+                    else:
+                        self.draw_cell(screen,x,y,WHITE," ")
+
+            while True:
+                for event in pygame.event.get():
+                    if event.type == pygame.QUIT:
+                        pygame.quit()
+                        sys.exit()
+                pygame.display.update()
 
 
-            def draw_cell(x, y, color, arrow) -> None:
+        else:
+            print("Tienes que tener instalado Pygame")
+
+    def draw_cell(self,screen, x, y, color, arrow) -> None:
                 # Fondo
                 rect = pygame.Rect(x * CELL_SIZE, y * CELL_SIZE, CELL_SIZE, CELL_SIZE)
                 pygame.draw.rect(screen, color, rect)
@@ -230,15 +256,22 @@ class GridWorld(MDP):
                 text_rect = text.get_rect(center=rect.center)
                 screen.blit(text, text_rect)
 
+
+
+        
+    def visualise_policy(self,policy) -> None:
+        if self.pygame_installed:
+            pygame.init()
+            screen = pygame.display.set_mode((500, 500))
             def draw_grid():
                 for y in range(self.height - 1, -1, -1):
                     for x in range(self.width):
                         if (x,y) in self.goal_states and self.goal_states[(x,y)] >0:
-                            draw_cell(y, x, GREEN, "")
+                            self.draw_cell(screen,y, x, GREEN, "")
                         elif (x,y) in self.goal_states and self.goal_states[(x,y)] <0:
-                            draw_cell(y, x, RED, "")
+                            self.draw_cell(screen,y, x, RED, "")
                         else:
-                            draw_cell(y,x,WHITE," ")
+                            self.draw_cell(screen,y,x,WHITE," ")
 
             draw_grid()
 
@@ -267,7 +300,7 @@ class GridWorld(MDP):
                 # Si el elemento es una recompensa
                 elif policy.select_action((x, y)) == self.TERMINATE:
                     result += f" | {self.goal_states[(x, y)]} "
-                # Si es otro sitio
+                # Si es otro
                 else:
                     result += " |  " + mov[policy.select_action((x, y))] + " "
             result += "\n"
@@ -278,14 +311,18 @@ class GridWorld(MDP):
             return MDP.execute(self, state=state, action=self.TERMINATE)
         return super().execute(state, action)
 
+# Pruebas
 if __name__ == "__main__":
-    gridworld = GridWorld(goals=[((9, 8), +10), ((8, 3), +3),
-                    ((4, 5), -5), ((4, 8), -10)])
-    print(gridworld.get_states())
+    # gridworld = GridWorld(goals=[((9, 8), +10), ((8, 3), +3),
+    #                 ((4, 5), -5), ((4, 8), -10)])
+    gridworld = GridWorld(goals=[((8, 2), +10), ((7, 7), +3),
+                    ((3, 5), -5), ((3, 2), -10)])
+    # gridworld = GridWorld(width=4,height=3,noise=0.1,blocked_states=[(1, 1)])
+    gridworld.visualise_initial_state()
 
     # Policy iteration
     # policy = TabularPolicy(default_action=gridworld.UP)
-    # PolicyIteration(gridworld, policy).policy_iteration(max_iterations=2000)
+    # PolicyIteration(gridworld, policy).policy_iteration(max_iterations=100)
     # print(policy.policy_table)
     # gridworld.visualise_policy(policy)
     
@@ -297,10 +334,11 @@ if __name__ == "__main__":
     # print(gridworld.policy_to_string(policy))
 
     # Q-Learning 
-    # qfunction = QTable()
-    # QLearning(gridworld, EpsilonGreedy(), qfunction).execute(episodes=1000)
-    # policy = qfunction.extract_policy(gridworld)
-    # print(gridworld.policy_to_string(policy))    
+    qfunction = QTable()
+    QLearning(gridworld, EpsilonGreedy(), qfunction).execute(episodes=2000)
+    policy = qfunction.extract_policy(gridworld)
+    print(policy.policy_table)
+    print(gridworld.policy_to_string(policy))    
     # gridworld.visualise_policy(policy)
 
 
@@ -310,4 +348,3 @@ if __name__ == "__main__":
     # policy = qfunction.extract_policy(gridworld)
     # print(gridworld.policy_to_string(policy))
     
-
