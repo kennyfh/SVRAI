@@ -26,6 +26,10 @@
 
 
 from collections import defaultdict
+import sys
+
+import pygame
+
 from mdp import *
 from policy_iteration import PolicyIteration
 from tabular_policy import TabularPolicy
@@ -37,6 +41,16 @@ import random
 
 from tabular_value_function import TabularValueFunction
 from value_iteration import ValueIteration
+
+
+WHITE = (255, 255, 255)
+GREEN = (0, 255, 0)
+RED = (255, 0, 0)
+GRAY = (128, 128, 128)
+BLACK = (0, 0, 0)
+CELL_SIZE = 50
+
+
 
 class GridWorld(MDP):
     TERMINATE = 'terminate'
@@ -104,10 +118,6 @@ class GridWorld(MDP):
                     break
         return valid_actions
 
-
-    """ Return all non-zero probability transitions for this action
-        from this state, as a list of (state, probability) pairs
-    """
     def valid_add(self, state, new_state, probability):
         # If the next state is blocked, stay in the same state
         if probability == 0.0:
@@ -133,7 +143,6 @@ class GridWorld(MDP):
             else:
                 return []
 
-        # Probability of not slipping left or right
         straight = 1 - (2 * self.noise)
 
         (x, y) = state
@@ -191,6 +200,59 @@ class GridWorld(MDP):
 
     def get_goal_states(self):
         return self.goal_states
+    
+    @staticmethod
+    def pygame_installed():
+        try:
+            import pygame
+            return True
+        except ModuleNotFoundError:
+            return False
+        
+    def visualise_policy(self,policy) -> None:
+        if self.pygame_installed:
+            pygame.init()
+            screen = pygame.display.set_mode((500, 500))
+
+
+            def draw_cell(x, y, color, arrow) -> None:
+                # Fondo
+                rect = pygame.Rect(x * CELL_SIZE, y * CELL_SIZE, CELL_SIZE, CELL_SIZE)
+                pygame.draw.rect(screen, color, rect)
+
+                # Borde
+                border_rect = pygame.Rect(x * CELL_SIZE, y * CELL_SIZE, CELL_SIZE, CELL_SIZE)
+                pygame.draw.rect(screen, BLACK, border_rect, 1)
+
+                # Texto
+                font = pygame.font.SysFont("arial", 20)
+                text = font.render(arrow, True, BLACK)
+                text_rect = text.get_rect(center=rect.center)
+                screen.blit(text, text_rect)
+
+            def draw_grid():
+                for y in range(self.height - 1, -1, -1):
+                    for x in range(self.width):
+                        if (x,y) in self.goal_states and self.goal_states[(x,y)] >0:
+                            draw_cell(y, x, GREEN, "")
+                        elif (x,y) in self.goal_states and self.goal_states[(x,y)] <0:
+                            draw_cell(y, x, RED, "")
+                        else:
+                            draw_cell(y,x,WHITE," ")
+
+            draw_grid()
+
+            while True:
+                for event in pygame.event.get():
+                    if event.type == pygame.QUIT:
+                        pygame.quit()
+                        sys.exit()
+                pygame.display.update()
+
+            
+        else:
+            print(self.policy_to_string(policy))
+
 
     def policy_to_string(self, policy:TabularPolicy) -> str:        
         result= "\n "
@@ -219,10 +281,14 @@ class GridWorld(MDP):
 if __name__ == "__main__":
     gridworld = GridWorld(goals=[((9, 8), +10), ((8, 3), +3),
                     ((4, 5), -5), ((4, 8), -10)])
+    print(gridworld.get_states())
+
     # Policy iteration
     # policy = TabularPolicy(default_action=gridworld.UP)
-    # PolicyIteration(gridworld, policy).policy_iteration(max_iterations=100)
-    # print(gridworld.policy_to_string(policy))
+    # PolicyIteration(gridworld, policy).policy_iteration(max_iterations=2000)
+    # print(policy.policy_table)
+    # gridworld.visualise_policy(policy)
+    
 
     # Value iteration
     # values = TabularValueFunction()
@@ -235,10 +301,13 @@ if __name__ == "__main__":
     # QLearning(gridworld, EpsilonGreedy(), qfunction).execute(episodes=1000)
     # policy = qfunction.extract_policy(gridworld)
     # print(gridworld.policy_to_string(policy))    
+    # gridworld.visualise_policy(policy)
+
 
     # Sarsa
-    qfunction = QTable()
-    SARSA(gridworld, EpsilonGreedy(), qfunction).execute(episodes=3000)
-    policy = qfunction.extract_policy(gridworld)
-    print(gridworld.policy_to_string(policy)) 
+    # qfunction = QTable()
+    # SARSA(gridworld, EpsilonGreedy(), qfunction).execute(episodes=3000)
+    # policy = qfunction.extract_policy(gridworld)
+    # print(gridworld.policy_to_string(policy))
+    
 

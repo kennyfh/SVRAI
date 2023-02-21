@@ -20,7 +20,7 @@ class PolicyGradient:
             rewards = []
 
             state = self.mdp.get_initial_state()
-            episode_reward = 0
+            # episode_reward = 0
             while not self.mdp.is_terminal(state):
                 action = self.policy.select_action(state)
                 next_state, reward = self.mdp.execute(state, action)
