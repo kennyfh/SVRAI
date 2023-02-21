@@ -12,25 +12,25 @@ class ValueFunction():
         ...
 
     """ Return the Q-value of action in state """
-    def get_q_value(self, mdp, state, action):
+    def get_q_value(self, model, state, action):
         q_value = 0.0
-        for (new_state, probability) in mdp.get_transitions(state, action):
-            reward = mdp.get_reward(state, action, new_state)
+        for (new_state, probability) in model.get_transitions(state, action):
+            reward = model.get_reward(state, action, new_state)
             q_value += probability * (
                 reward
-                + (mdp.get_discount_factor() * self.get_value(new_state))
+                + (model.get_discount_factor() * self.get_value(new_state))
             )
 
         return q_value
 
     """ Return a policy from this value function """
 
-    def extract_policy(self, mdp):
+    def extract_policy(self, model):
         policy = TabularPolicy()
-        for state in mdp.get_states():
+        for state in model.get_states():
             max_q = float("-inf")
-            for action in mdp.get_actions(state):
-                q_value = self.get_q_value(mdp, state, action)
+            for action in model.get_actions(state):
+                q_value = self.get_q_value(model, state, action)
 
                 # If this is the maximum Q-value so far,
                 # set the policy for this state

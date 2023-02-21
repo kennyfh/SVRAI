@@ -1,6 +1,11 @@
 import math
 import random
 
+"""
+Clase que proporciona las estrategias del MultiArmedBandit
+que pretenden aprender una política que minimice el arrepentimiento total
+
+"""
 class MultiArmedBandit():
 
     """ Select an action for this state given from a list given a Q-function """
@@ -14,8 +19,18 @@ class MultiArmedBandit():
         self.__init__()
 
 
+"""
+Epsilon-Greedy es una estrategia que selecciona la acción conocida
+con una probabilidad (1-epsilon) y una opción aleatoria epsion. Esto
+nos permite explorar nuevas opciones con cierta frecuencia.
+
+Esto se debe usar en problemas donde el número de opciones es
+relativamente pequeño.
+
+"""
 class EpsilonGreedy(MultiArmedBandit):
-    def __init__(self, epsilon=0.1):
+
+    def __init__(self, epsilon=0.1) -> None:
         self.epsilon = epsilon
 
     def reset(self):
@@ -28,9 +43,12 @@ class EpsilonGreedy(MultiArmedBandit):
         (arg_max_q, _) = qfunction.get_max_q(state, actions)
         return arg_max_q
     
-
+"""
+Softmax es una estrategia que  hace uso de una distribución de probabilidad 
+softmax para seleccionar una de las acciones. 
+"""
 class Softmax(MultiArmedBandit):
-    def __init__(self, tau=1.0):
+    def __init__(self, tau=1.0) -> None:
         self.tau = tau
 
     def reset(self):
@@ -57,15 +75,17 @@ class Softmax(MultiArmedBandit):
         return result
     
 
+"""
+Upper Confidence Bound (UCB) es una estrategia enfocado en la
+incertidumbre para poder equilibrar la exploración y la explotación
+"""
 class UpperConfidenceBounds(MultiArmedBandit):
-    def __init__(self):
+    def __init__(self) -> None:
         self.total = 0
-        # number of times each action has been chosen
+        # Número de veces que una acción ha sido seleccionada
         self.times_selected = {}
 
     def select(self, state, actions, qfunction):
-
-        # First execute each action one time
         for action in actions:
             if action not in self.times_selected.keys():
                 self.times_selected[action] = 1
@@ -84,8 +104,8 @@ class UpperConfidenceBounds(MultiArmedBandit):
             elif value == max_value:
                 max_actions += [action]
 
-        # if there are multiple actions with the highest value
-        # choose one randomly
+        # Si hay varias acciones con el valor más alto,
+        # se selecciona una al azar
         result = random.choice(max_actions)
         self.times_selected[result] = self.times_selected[result] + 1
         self.total += 1

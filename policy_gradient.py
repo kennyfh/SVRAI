@@ -5,27 +5,27 @@ from tqdm import tqdm
 
 
 class PolicyGradient:
-    def __init__(self, mdp, policy, alpha) -> None:
+    
+    """Inicio de la clase"""
+    def __init__(self, model, policy, alpha) -> None:
         super().__init__()
-        self.alpha = alpha  # Learning rate (gradient update step-size)
-        self.mdp = mdp
-        self.policy = policy
+        self.alpha = alpha  # Tasa de aprendizaje
+        self.model = model # Modelo de nuestro problema MDP
+        self.policy = policy # Política
 
-    """ Generate and store an entire episode trajectory to use to update the policy """
+    """ Genera y almacena una trayectoria de episodios completa para utilizarla en la actualización de la política."""
 
     def execute(self, episodes=100):
-        for _ in tqdm(range(episodes), desc="Episodes"):
-            actions = []
-            states = []
-            rewards = []
+        for _ in tqdm(range(episodes), desc="Episodios"):
+            states, actions, rewards = [], [], []
+            state = self.model.get_initial_state()
 
-            state = self.mdp.get_initial_state()
             # episode_reward = 0
-            while not self.mdp.is_terminal(state):
+            while not self.model.is_terminal(state):
                 action = self.policy.select_action(state)
-                next_state, reward = self.mdp.execute(state, action)
+                next_state, reward = self.model.execute(state, action)
 
-                # Store the information from this step of the trajectory
+                # Almacena la información de este paso de la trayectoria
                 states.append(state)
                 actions.append(action)
                 rewards.append(reward)
@@ -35,12 +35,11 @@ class PolicyGradient:
             deltas = self.calculate_deltas(rewards)
             self.policy.update(states=states, actions=actions, deltas=deltas)
 
+    """
+        Generar una lista de las recompensas futuras descontadas en cada paso de un episodio.
+    """
     def calculate_deltas(self, rewards):
-        """
-        Generate a list of the discounted future rewards at each step of an episode
-        Note that discounted_reward[T-2] = rewards[T-1] + discounted_reward[T-1] * gamma.
-        We can use that pattern to populate the discounted_rewards array.
-        """
+        
         T = len(rewards)
         discounted_future_rewards = [0 for _ in range(T)]
         # The final discounted reward is the reward you get at that step
@@ -48,13 +47,13 @@ class PolicyGradient:
         for t in reversed(range(0, T - 1)):
             discounted_future_rewards[t] = (
                 rewards[t]
-                + discounted_future_rewards[t + 1] * self.mdp.get_discount_factor()
+                + discounted_future_rewards[t + 1] * self.model.get_discount_factor()
             )
         deltas = []
         for t in range(len(discounted_future_rewards)):
             deltas += [
                 self.alpha
-                * (self.mdp.get_discount_factor() ** t)
+                * (self.model.get_discount_factor() ** t)
                 * discounted_future_rewards[t]
             ]
         return deltas

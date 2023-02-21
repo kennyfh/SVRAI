@@ -12,6 +12,7 @@ class TabularValueFunction(ValueFunction):
         for state in value_table.value_table.keys():
             self.update(state, value_table.get_value(state))
 
+    @property
     def get_value(self, state):
         return self.value_table[state]
 

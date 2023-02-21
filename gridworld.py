@@ -1,10 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-# ----------------------------------------------------------------------------
-# Module: GRIDWORLD
-# Created By  : KENNY JESÚS FLORES HUAMÁN
-# version ='1.0'
-# ---------------------------------------------------------------------------
+
 # EL PROBLEMA DEL MUNDO MALLA
 #
 # El ejemplo de mundo malla es una idealización del movimiento de un robot en un entorno.
@@ -24,8 +20,6 @@
 #  una de las cuatro esquinas del mundo cuadriculado.
 # ---------------------------------------------------------------------------
 
-
-from collections import defaultdict
 import sys
 import numpy as np
 
@@ -39,7 +33,6 @@ from qlearning import QLearning
 from sarsa import SARSA
 from multi_armed_bandit import EpsilonGreedy
 import random
-import math
 
 from tabular_value_function import TabularValueFunction
 from value_iteration import ValueIteration
@@ -156,11 +149,14 @@ class GridWorld(MDP):
             }
         if state in self.get_goal_states().keys():
             if action == self.TERMINATE:
-                # transitions += [(self.TERMINAL, 1.0)]
-                transitions += [random.choice([(self.TERMINAL, 1.0),
-                                               ((0,0), 1.0),((self.width-1,0), 1.0), ((self.width-1,0), 1.0)
-                                               ,((0,self.height-1), 1.0),
-                                               ((self.width-1, self.height-1), 1.0)])]
+                transitions += [(self.TERMINAL, 1.0)]
+                # transitions += [random.choice([(self.TERMINAL, 1.0),
+                #                                ((0,0), 1.0),
+                #                                ((self.height-1,0), 1.0),
+                #                                ((self.width-1,0), 1.0),
+                #                                ((self.width-1,self.height-1), 1.0)
+                                               
+                                            #    ])]
         elif action==self.UP or action ==self.DOWN or action==self.LEFT or action==self.RIGHT:
             mov =  movements[action]
             transitions += [self.valid_add(state, mov[0], straight),
@@ -320,15 +316,14 @@ if __name__ == "__main__":
     #                 ((4, 5), -5), ((4, 8), -10)])
     gridworld = GridWorld(goals=[((8, 2), +10), ((7, 7), +3),
                     ((3, 5), -5), ((3, 2), -10)])
-    # gridworld = GridWorld(width=4,height=3,noise=0.1,blocked_states=[(1, 1)])
     # gridworld.visualise_initial_state()
 
     # Policy iteration
-    # policy = TabularPolicy(default_action=gridworld.UP)
-    # PolicyIteration(gridworld, policy).policy_iteration(max_iterations=100)
-    # print(policy.policy_table)
-    # gridworld.visualise_policy(policy)
-    
+    policy = TabularPolicy(default_action=gridworld.UP)
+    PolicyIteration(gridworld, policy).policy_iteration(max_iterations=300)
+    print(policy.policy_table)
+    print(gridworld.policy_to_string(policy))
+
 
     # Value iteration
     # values = TabularValueFunction()
@@ -337,12 +332,12 @@ if __name__ == "__main__":
     # print(gridworld.policy_to_string(policy))
 
     # Q-Learning 
-    qfunction = QTable()
-    QLearning(gridworld, EpsilonGreedy(), qfunction).execute(episodes=2000)
-    policy = qfunction.extract_policy(gridworld)
-    print(policy.policy_table)
-    # print(gridworld.policy_to_string(policy))    
-    gridworld.visualise_policy(policy)
+    # qfunction = QTable()
+    # QLearning(gridworld, EpsilonGreedy(), qfunction).execute(episodes=2000)
+    # policy = qfunction.extract_policy(gridworld)
+    # print(policy.policy_table)
+    # # print(gridworld.policy_to_string(policy))    
+    # gridworld.visualise_policy(policy)
 
 
     # Sarsa

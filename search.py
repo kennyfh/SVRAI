@@ -4,20 +4,20 @@ Busqueda clásica como MDP
 
 # Clase Search
 
-class search(object):
+class Search:
 
     def __init__(self,states):
         self.states = states
 
     def A(self,state):
-        pass
+        ...
 
 
     def R(self,state,action):
-        pass
+        ...
 
     def T(self, state, action):
-        pass
+        ...
 
 
 def forward_search(P,s,d,U):

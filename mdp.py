@@ -1,16 +1,44 @@
 """
-MARKOV CHAIN CLASS
+CLASE QUE PERMITE LA CREACIÓN DE MODELOS DE MARKOV PARA EL PARADIGMA BASADO EN MODELOS
+(aunque se permite el uso de algoritmos libres de modelo)
 """
 
 import random
 
 
 class MDP:
-    """ Return all states of this MDP """
+
+    """
+    CLASE MDP
+
+    * Si algún MDP se quiere hacer uso de algoritmos libres de modelo, los algoritmos descartarán las
+    funciones get_states, get_transitions y get_rewards
+    
+    """
+
+    """ Devuelve todos los estados del MDP"""
     def get_states(self):
         ...
 
-    """ Return all actions with non-zero probability from this state """
+    """ Devolvemos True si llegamos a un estado que finalice"""
+    def is_terminal(self, state):
+        ...
+
+    """ Devolvemos el factor de descuento """
+    @property
+    def get_discount_factor(self):
+        ...
+
+    """ Se devuelve el estados """
+    def get_initial_state(self):
+        ...
+
+    """ Se devuelve todos los estado objetivo """
+    def get_goal_states(self):
+        ...
+    
+
+    """ Devuelve todas las acciones de un estado con una probabilidad distinta de nula"""
     def get_actions(self, state):
         ...
 
@@ -26,23 +54,8 @@ class MDP:
     def get_reward(self, state, action, next_state):
         ...
 
-    """ Return true if and only if state is a terminal state of this MDP """
-    def is_terminal(self, state):
-        ...
-
-    """ Return the discount factor for this MDP """
-    def get_discount_factor(self):
-        ...
-
-    """ Return the initial state of this MDP """
-    def get_initial_state(self):
-        ...
-
-    """ Return all goal states of this MDP """
-    def get_goal_states(self):
-        ...
-
-
+    """ Devuelve un nuevo estado y la recompensa. Esto se puede usar para el paradigma
+    de aprendizaje sin modelo."""
     def execute(self, state, action):
         rand = random.random()
         cumulative_probability = 0.0
@@ -52,15 +65,15 @@ class MDP:
             cumulative_probability += probability
             if cumulative_probability >= 1.0:
                 raise (
-                    "Cumulative probability >= 1.0 for action "
+                    "Probabilidad acumulada >= 1,0 para la acción "
                     + str(action)
-                    + " from "
+                    + " del estado "
                     + str(state)
                 )
 
         raise (
-            "No outcome state in simulation for action"
+            "No hay estado de resultado en la simulación para la acción"
             + str(action)
-            + " from "
+            + " del estado "
             + str(state)
         )
