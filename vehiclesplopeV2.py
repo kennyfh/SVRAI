@@ -16,10 +16,6 @@
 # ---------------------------------------------------------------------------
 from mdp import *
 from typing import List
-from policy_iteration import PolicyIteration
-from tabular_policy import TabularPolicy
-from tabular_value_function import TabularValueFunction
-from value_iteration import ValueIteration
 
 class VehicleSlopeV2(MDP):
     # Estados
@@ -33,8 +29,8 @@ class VehicleSlopeV2(MDP):
 
     """Configuración inicial"""
     def __init__(self,
-                 discount_factor:float=0.8,
-                 initial_state:str="LOW"
+                 discount_factor:float=0.8, # Factor de descuento
+                 initial_state:str="LOW" # Estado inicial
                  ) -> None:
         
         self.discount_factor = discount_factor
@@ -53,13 +49,18 @@ class VehicleSlopeV2(MDP):
 
     """
     Estados:
-        Bajo: LOW, Medio: MEDIUM, ALTO: HIGH, SUPERIOR: TOP
+        Bajo: LOW
+        Medio: MEDIUM
+        ALTO: HIGH
+        SUPERIOR: TOP
     """
     def get_states(self) -> List[str]:
         return [self.LOW, self.MEDIUM, self.HIGH, self.TOP]
 
     """
-    Acciones: GIRAR RUEDAS LENTAMENTE: SPIN_LOW, GIRAR RUEDAS RÁPIDAMENTE: SPIN_FAST
+    Acciones: 
+        GIRAR RUEDAS LENTAMENTE: SPIN_LOW, 
+        GIRAR RUEDAS RÁPIDAMENTE: SPIN_FAST
     """
     def get_actions(self, state=None):
         actions = [self.SPIN_LOW, self.SPIN_FAST]
@@ -78,9 +79,9 @@ class VehicleSlopeV2(MDP):
 
     """
     Recompensas:
-        -1 Si gira las ruedas lentamente
-        -2 Si gira las ruedas rápidamente
-        +100 si llega a la cima y el siguiente estado sigue en la cima
+        (-1) Si gira las ruedas lentamente
+        (-2) Si gira las ruedas rápidamente
+        (+100) si llega a la cima y el siguiente estado sigue en la cima
 
     """
     def get_reward(self, state, action, next_state) -> float:
@@ -105,13 +106,3 @@ class VehicleSlopeV2(MDP):
 
     def get_goal_states(self):
         return self.goal_states
-
-
-if __name__ == "__main__":
-    vehicle = VehicleSlopeV2(discount_factor=1)
-    
-    # Iteración de valores
-    values = TabularValueFunction()
-    ValueIteration(vehicle, values).value_iteration(max_iterations=10000)
-    policy = values.extract_policy(vehicle)
-    print(policy.policy_table)

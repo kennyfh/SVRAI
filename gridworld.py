@@ -22,22 +22,12 @@
 
 import sys
 import numpy as np
-
 import pygame
-
 from mdp import *
-from policy_iteration import PolicyIteration
-from tabular_policy import TabularPolicy
-from qtable import QTable
-from qlearning import QLearning
-from sarsa import SARSA
-from multi_armed_bandit import EpsilonGreedy
 import random
+from typing import List, Union, Tuple
 
-from tabular_value_function import TabularValueFunction
-from value_iteration import ValueIteration
-
-
+# COLORES PARA PYGAME
 WHITE = (255, 255, 255)
 GREEN = (0, 255, 0)
 RED = (255, 0, 0)
@@ -45,18 +35,16 @@ GRAY = (128, 128, 128)
 BLACK = (0, 0, 0)
 CELL_SIZE = 50
 
-
-
 class GridWorld(MDP):
-    TERMINATE = 'terminate'
-    TERMINAL = ('terminal', 'terminal')
+    
+    TERMINAL = ('end', 'end')
+    TERMINATE = 'end'
     UP = "UP"
     DOWN = "DOWN"
     LEFT = "LEFT"
     RIGHT = "RIGHT"
 
-    """ Initialization"""
-
+    """ Inicio de la clase"""
     def __init__(
         self,
         noise=0.3,
@@ -68,18 +56,16 @@ class GridWorld(MDP):
         initial_state=(0, 0),
         goals=None,
     ) -> None:
-        # Ruido:
-        self.noise = noise
-        # Dimensiones del grid
-        self.width = width
+
+        self.noise = noise # Ruido
+        self.width = width # Dimensionalidad
         self.height = height
-        # Factor de descuento y
-        self.discount_factor = discount_factor
-        # Estado inicial
-        self.initial_state = initial_state
+        self.discount_factor = discount_factor # Factor de descuento
+        self.initial_state = initial_state # Estado inicial
+
         # Recompensas
         if goals is None:
-            # Si no existen recompensas dentro de la malla, pondremos 2 recompensas para testear la prueba
+            # Se pondrán 2 recompensas de prueba si no hay metas
             self.goal_states = dict(
                 [((width - 1, height - 1), 1), ((width - 1, height - 2), -1)]
             )
@@ -88,20 +74,21 @@ class GridWorld(MDP):
         
         # Obstáculos: en nuestro problema no tenemos ningún obstáculo, pero podemos añadir algunos por experimentación
         self.blocked_states = blocked_states
+
         # Coste de accion
         self.action_cost = action_cost
-        super().__init__()
 
-    
-    def get_states(self):
-        """ Los estados son todas las casillas donde no se encuentran
-        obstáculos"""
+
+    """Conjunto de estados"""    
+    def get_states(self) -> List[Union[str, Tuple[int, int]]]:
+
         states = [self.TERMINAL]
         states += [(x, y) for x in range(self.width)
                    for y in range(self.height) if (x,y) not in self.blocked_states]
         return states
 
-    def get_actions(self, state=None):
+    def get_actions(self, state=None) -> List[str]:
+
         actions = [self.UP, self.DOWN,self.LEFT, self.RIGHT, self.TERMINATE]
         if state is None:
             return actions
@@ -113,21 +100,20 @@ class GridWorld(MDP):
                     break
         return valid_actions
 
-    def valid_add(self, state, new_state, probability):
-        # If the next state is blocked, stay in the same state
-        if probability == 0.0:
+    def valid_add(self, state, new_state, prob):
+        if prob == 0.0:
             return ()
 
         if new_state in self.blocked_states:
-            return (state, probability)
+            return (state, prob)
 
         # Move to the next space if it is not off the grid
         (x, y) = new_state
         if x >= 0 and x < self.width and y >= 0 and y < self.height:
-            return ((x, y), probability)
+            return ((x, y), prob)
 
         # If off the grid, state in the same state
-        return (state, probability)
+        return (state, prob)
 
     def get_transitions(self, state, action):
         transitions = []
@@ -162,24 +148,17 @@ class GridWorld(MDP):
             transitions += [self.valid_add(state, mov[0], straight),
                             self.valid_add(state, mov[1], self.noise),
                             self.valid_add(state, mov[2], self.noise)]
-            
-        # # Fusionar algún duplicado
-        # merged = defaultdict(lambda: 0.0)
-        # for (state, probability) in transitions:
-        #     merged[state] = merged[state] + probability
-
-        # transitions = []
-        # for outcome in merged.keys():
-        #     transitions += [(outcome, merged[outcome])]
-
         return transitions
 
-
-    def get_reward(self, state, action, next_state):
-        """
+    """
         Devuelve una recompensa si el siguiente estado es un terminal y
         y este estado es una que tiene recompensa. Si no, devuelve el coste de acción que hayamos realizado
-        """
+    """
+    def get_reward(self, 
+                  state: Union[Tuple[int, int], Tuple[str, str]],
+                  action: str,
+                  next_state:Union[Tuple[int, int], Tuple[str, str]]) -> float:
+
         reward = 0.
         if state in self.get_goal_states().keys() and next_state == self.TERMINAL:
             reward = self.get_goal_states().get(state)
@@ -187,16 +166,17 @@ class GridWorld(MDP):
             reward = self.action_cost
         return reward
 
+    """ Si llegamos a un estado terminal devolvemos True"""
     def is_terminal(self, state) -> bool:
         return True if state==self.TERMINAL else False
 
-    def get_discount_factor(self):
+    def get_discount_factor(self) -> float:
         return self.discount_factor
 
-    def get_initial_state(self):
+    def get_initial_state(self) -> Tuple[int,int]:
         return self.initial_state
 
-    def get_goal_states(self):
+    def get_goal_states(self) -> List[Tuple[int,int]]:
         return self.goal_states
     
     @staticmethod
@@ -206,7 +186,11 @@ class GridWorld(MDP):
             return True
         except ModuleNotFoundError:
             return False
-        
+    
+    """
+    Función para visualizar el estado inicial, si no se tiene pygame instalado, se printea por
+    consola 
+    """
     def visualise_initial_state(self) -> None:
         if self.pygame_installed:
             pygame.init()
@@ -238,6 +222,7 @@ class GridWorld(MDP):
         else:
             print("Tienes que tener instalado Pygame")
 
+
     def draw_cell(self,screen, x, y, color, arrow) -> None:
                 # Fondo
                 rect = pygame.Rect(x * CELL_SIZE, y * CELL_SIZE, CELL_SIZE, CELL_SIZE)
@@ -254,8 +239,7 @@ class GridWorld(MDP):
                 screen.blit(text, text_rect)
 
 
-
-        
+    """Función que pinta en Pygame la política ya sea con Pygame o por terminal"""        
     def visualise_policy(self,policy) -> None:
         mov = {self.UP: "↑", self.DOWN: "↓",
                     self.LEFT: "←", self.RIGHT: "→", self.TERMINATE: " "}
@@ -286,7 +270,7 @@ class GridWorld(MDP):
             print(self.policy_to_string(policy))
 
 
-    def policy_to_string(self, policy:TabularPolicy) -> str:        
+    def policy_to_string(self, policy) -> str:        
         result= "\n "
         mov = {self.UP: "↑", self.DOWN: "↓",
                     self.LEFT: "←", self.RIGHT: "→", self.TERMINATE: " "}
@@ -305,44 +289,9 @@ class GridWorld(MDP):
             result += "\n"
         return result
 
+
     def execute(self, state, action):
         if state in self.goal_states:
             return MDP.execute(self, state=state, action=self.TERMINATE)
+
         return super().execute(state, action)
-
-# Pruebas
-if __name__ == "__main__":
-    # gridworld = GridWorld(goals=[((9, 8), +10), ((8, 3), +3),
-    #                 ((4, 5), -5), ((4, 8), -10)])
-    gridworld = GridWorld(goals=[((8, 2), +10), ((7, 7), +3),
-                    ((3, 5), -5), ((3, 2), -10)])
-    # gridworld.visualise_initial_state()
-
-    # Policy iteration
-    policy = TabularPolicy(default_action=gridworld.UP)
-    PolicyIteration(gridworld, policy).policy_iteration(max_iterations=300)
-    print(policy.policy_table)
-    print(gridworld.policy_to_string(policy))
-
-
-    # Value iteration
-    # values = TabularValueFunction()
-    # ValueIteration(gridworld, values).value_iteration(max_iterations=10000)
-    # policy = values.extract_policy(gridworld)
-    # print(gridworld.policy_to_string(policy))
-
-    # Q-Learning 
-    # qfunction = QTable()
-    # QLearning(gridworld, EpsilonGreedy(), qfunction).execute(episodes=2000)
-    # policy = qfunction.extract_policy(gridworld)
-    # print(policy.policy_table)
-    # # print(gridworld.policy_to_string(policy))    
-    # gridworld.visualise_policy(policy)
-
-
-    # Sarsa
-    # qfunction = QTable()
-    # SARSA(gridworld, EpsilonGreedy(), qfunction).execute(episodes=3000)
-    # policy = qfunction.extract_policy(gridworld)
-    # print(gridworld.policy_to_string(policy))
-    

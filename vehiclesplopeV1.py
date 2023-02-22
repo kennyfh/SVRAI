@@ -14,17 +14,17 @@
 # ---------------------------------------------------------------------------
 from mdp import *
 
-
-
 class VehicleSlopeV1(MDP):
-    #States
+
+    #Estados
     LOW = "LOW"
     MEDIUM = "MEDIUM"
     HIGH = "HIGH"
-    # Actions
+    # Acciones
     SPIN = "SPIN"
     NOT_SPIN = "NOT_SPIN"
 
+    """Inicialización de la clase"""
     def __init__(self,
                 discount_factor=0.8
                 )-> None:
@@ -74,6 +74,3 @@ class VehicleSlopeV1(MDP):
 
     def get_goal_states(self):
         return []
-
-if __name__ == "__main__":
-    print("prueba")
