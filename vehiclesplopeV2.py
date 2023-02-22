@@ -1,10 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-# ----------------------------------------------------------------------------
-# Module: Vehicleslopev2
-# Created By  : KENNY JESÚS FLORES HUAMÁN
-# version ='1.0'
-# ---------------------------------------------------------------------------
+
 # EL PROBLEMA DEL VEHICULO EN PENDIENTE (V2)
 #
 # Supongamos ahora que el vehículo puede encontrarse en uno de los cuatro estados de la pendiente: superior,
@@ -19,29 +15,28 @@
 #   y su objetivo es llegar a la cima con el mínimo consumo de energía previsto.
 # ---------------------------------------------------------------------------
 from mdp import *
+from typing import List
 from policy_iteration import PolicyIteration
 from tabular_policy import TabularPolicy
 from tabular_value_function import TabularValueFunction
 from value_iteration import ValueIteration
 
-# Estados: bajo, medio, alto y superior
-# Estado final: cuando llegue al superior que será la cima
-
-
 class VehicleSlopeV2(MDP):
-    # States
+    # Estados
     LOW = "LOW"
     MEDIUM = "MEDIUM"
     HIGH = "HIGH"
     TOP = "TOP"
-    # Actions
+    # Acciones
     SPIN_FAST = "SPIN_FAST"
     SPIN_LOW = "SPIN_LOW"
 
+    """Configuración inicial"""
     def __init__(self,
-                 discount_factor=0.8,
-                 initial_state="LOW"
+                 discount_factor:float=0.8,
+                 initial_state:str="LOW"
                  ) -> None:
+        
         self.discount_factor = discount_factor
         self.initial_state = initial_state
 
@@ -56,9 +51,16 @@ class VehicleSlopeV2(MDP):
             (self.TOP, self.SPIN_FAST): [(self.TOP, 1)]
         }
 
-    def get_states(self):
+    """
+    Estados:
+        Bajo: LOW, Medio: MEDIUM, ALTO: HIGH, SUPERIOR: TOP
+    """
+    def get_states(self) -> List[str]:
         return [self.LOW, self.MEDIUM, self.HIGH, self.TOP]
 
+    """
+    Acciones: GIRAR RUEDAS LENTAMENTE: SPIN_LOW, GIRAR RUEDAS RÁPIDAMENTE: SPIN_FAST
+    """
     def get_actions(self, state=None):
         actions = [self.SPIN_LOW, self.SPIN_FAST]
         if state is None:
@@ -74,7 +76,14 @@ class VehicleSlopeV2(MDP):
     def get_transitions(self, state, action):
         return self.transitions_dict[(state, action)]
 
-    def get_reward(self, state, action, next_state):
+    """
+    Recompensas:
+        -1 Si gira las ruedas lentamente
+        -2 Si gira las ruedas rápidamente
+        +100 si llega a la cima y el siguiente estado sigue en la cima
+
+    """
+    def get_reward(self, state, action, next_state) -> float:
         reward = 0.
         if state == self.TOP and next_state == self.TOP:
             reward = 100
@@ -82,10 +91,13 @@ class VehicleSlopeV2(MDP):
             reward = -1 if action == self.SPIN_LOW else -2
         return reward
 
+    """
+    Termina cuando llegamos a la cima
+    """
     def is_terminal(self, state) -> bool:
         return True if state == self.TOP else False
 
-    def get_discount_factor(self):
+    def get_discount_factor(self) -> float:
         return self.discount_factor
 
     def get_initial_state(self):

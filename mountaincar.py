@@ -6,7 +6,7 @@ from qlearning import QLearning
 
 from qtable import QTable
 from sarsa import SARSA
-import numpy as np
+
 
 
 class MountainCar:

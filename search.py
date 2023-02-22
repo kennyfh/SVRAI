@@ -1,17 +1,13 @@
 """
 Busqueda clásica como MDP
 """
-
-# Clase Search
-
 class Search:
 
-    def __init__(self,states):
+    def __init__(self,states) -> None :
         self.states = states
 
     def A(self,state):
         ...
-
 
     def R(self,state,action):
         ...

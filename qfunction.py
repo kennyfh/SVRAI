@@ -3,18 +3,18 @@ from tabular_policy import TabularPolicy
 
 class QFunction:
 
-    """ Update the Q-value of (state, action) by delta """
+    """ Actualiza el valor Q de (estado, acción) por delta"""
 
     def update(self, state, action, delta):
         ...
 
-    """ Get a Q value for a given state-action pair """
+    """ Obtiene un valor Q para un par estado-acción dado """
 
     def get_q_value(self, state, action):
         ...
 
-    """ Return a pair containing the action and Q-value, where the
-        action has the maximum Q-value in state
+    """ Devuelve un par que contiene la acción y el valor Q, donde la acción 
+        tiene el máximo valor Q en el estado
     """
 
     def get_max_q(self, state, actions):
@@ -27,7 +27,7 @@ class QFunction:
                 max_q = value
         return (arg_max_q, max_q)
 
-    """ Extract a policy for this Q-function  """
+    """ Extrae la política de la Q-function  """
 
     def extract_policy(self, mdp):
         policy = TabularPolicy()

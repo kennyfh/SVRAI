@@ -1,10 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-# ----------------------------------------------------------------------------
-# Module: Vehicleslope
-# Created By  : KENNY JESÚS FLORES HUAMÁN
-# version ='1.0'
-# ---------------------------------------------------------------------------
+
 # EL PROBLEMA DEL VEHICULO EN PENDIENTE (V1)
 #
 # Consideremos un vehículo que opera en una pendiente y utiliza paneles solares para recargarse. 
@@ -41,11 +37,10 @@ class VehicleSlopeV1(MDP):
             (self.HIGH,self.SPIN):[(self.HIGH, 1)],
             (self.HIGH,self.NOT_SPIN):[(self.MEDIUM, 1)]
         }
-                
-
+            
 
     def get_states(self):
-        return [self.LOW, self.MEDIUM, self.HIGH, self.TOP]
+        return [self.LOW, self.MEDIUM, self.HIGH]
 
     def get_actions(self, state=None):
         actions = [self.SPIN,self.NOT_SPIN]
@@ -63,23 +58,22 @@ class VehicleSlopeV1(MDP):
         return self.transitions_dict[(state,action)]
 
     def get_reward(self, state, action, next_state):
-        ...
+        if state == self.LOW and action == self.NOT_SPIN:
+            return 0
+        else:
+            return 3 - int(action == self.SPIN)
 
-    """ Return true if and only if state is a terminal state of this MDP """
     def is_terminal(self, state):
-        ...
+        return False
 
-    """ Return the discount factor for this MDP """
     def get_discount_factor(self):
         return self.discount_factor
 
-    """ Return the initial state of this MDP """
     def get_initial_state(self):
-        ...
+        return self.LOW
 
-    """ Return all goal states of this MDP """
     def get_goal_states(self):
-        ...
+        return []
 
 if __name__ == "__main__":
     print("prueba")

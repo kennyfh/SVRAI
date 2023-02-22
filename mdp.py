@@ -25,7 +25,6 @@ class MDP:
         ...
 
     """ Devolvemos el factor de descuento """
-    @property
     def get_discount_factor(self):
         ...
 
@@ -37,7 +36,6 @@ class MDP:
     def get_goal_states(self):
         ...
     
-
     """ Devuelve todas las acciones de un estado con una probabilidad distinta de nula"""
     def get_actions(self, state):
         ...
