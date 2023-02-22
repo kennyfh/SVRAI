@@ -1,10 +1,6 @@
 
 import math
 import random
-from multi_armed_bandit import EpsilonGreedy
-from qlearning import QLearning
-
-from qtable import QTable
 
 class CartPole:
     def __init__(self) -> None:
@@ -47,12 +43,8 @@ class CartPole:
         force = self.force_mag if action == 1 else -self.force_mag
         costheta = math.cos(theta)
         sintheta = math.sin(theta)
-        temp = (
-            force + self.polemass_length * theta_dot**2 * sintheta
-        ) / self.total_mass
-        thetaacc = (self.gravity * sintheta - costheta * temp) / (
-            self.length * (4.0 / 3.0 - self.masspole * costheta**2 / self.total_mass)
-        )
+        temp = (force + self.polemass_length * theta_dot**2 * sintheta) / self.total_mass
+        thetaacc = (self.gravity * sintheta - costheta * temp) / (self.length * (4.0 / 3.0 - self.masspole * costheta**2 / self.total_mass))
         xacc = temp - self.polemass_length * thetaacc * costheta / self.total_mass
 
         
@@ -71,8 +63,3 @@ class CartPole:
 
         return next_state, reward
 
-if __name__ == "__main__":
-    cartpole = CartPole()
-    qfunction = QTable()
-    QLearning(cartpole, EpsilonGreedy(), qfunction).execute(episodes=100)
-    print(qfunction.qtable)

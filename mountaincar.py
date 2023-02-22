@@ -1,24 +1,16 @@
 import math
 import random
 from typing import List, Tuple
-from multi_armed_bandit import Softmax
-from qlearning import QLearning
-
-from qtable import QTable
-from sarsa import SARSA
-
-
 
 class MountainCar:
+
+    """ Inialización de la clase"""
     def __init__(self) -> None:
-        # Rango de la posición horizontal del vehículo
-        # x∈[−1.2,0.6]
-        self.min_x = -1.2
+
+        self.min_x = -1.2 # x ∈ [−1.2,0.6]
         self.max_x = 0.6
-        # Máxima velocidad
-        # v∈[−0.07,0.07]
-        self.max_v = 0.07
-        self.discount_factor=0.9
+        self.max_v = 0.07 # v∈[−0.07,0.07]
+        self.discount_factor=0.9 # Factor de descuento
 
     def get_initial_state(self) -> Tuple[float,float]:
         """

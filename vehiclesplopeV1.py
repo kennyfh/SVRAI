@@ -13,6 +13,7 @@
 #  El robot quiere ganar tanta energía como sea posible.
 # ---------------------------------------------------------------------------
 from mdp import *
+from typing import List
 
 class VehicleSlopeV1(MDP):
 
@@ -39,10 +40,10 @@ class VehicleSlopeV1(MDP):
         }
             
 
-    def get_states(self):
+    def get_states(self) -> List[str]:
         return [self.LOW, self.MEDIUM, self.HIGH]
 
-    def get_actions(self, state=None):
+    def get_actions(self, state=None) -> List[str]:
         actions = [self.SPIN,self.NOT_SPIN]
         if state is None:
             return actions
@@ -57,20 +58,20 @@ class VehicleSlopeV1(MDP):
     def get_transitions(self, state, action):
         return self.transitions_dict[(state,action)]
 
-    def get_reward(self, state, action, next_state):
+    def get_reward(self, state:str, action:str, next_state:str) -> int:
         if state == self.LOW and action == self.NOT_SPIN:
             return 0
         else:
             return 3 - int(action == self.SPIN)
 
-    def is_terminal(self, state):
+    def is_terminal(self, state) -> bool:
         return False
 
-    def get_discount_factor(self):
+    def get_discount_factor(self) -> float:
         return self.discount_factor
 
-    def get_initial_state(self):
+    def get_initial_state(self) -> str:
         return self.LOW
 
-    def get_goal_states(self):
+    def get_goal_states(self) -> list:
         return []

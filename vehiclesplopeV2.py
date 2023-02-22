@@ -14,6 +14,7 @@
 #  consume dos unidades de energía por unidad de tiempo. El vehículo se encuentra en la parte baja de la pendiente
 #   y su objetivo es llegar a la cima con el mínimo consumo de energía previsto.
 # ---------------------------------------------------------------------------
+
 from mdp import *
 from typing import List
 
@@ -62,7 +63,7 @@ class VehicleSlopeV2(MDP):
         GIRAR RUEDAS LENTAMENTE: SPIN_LOW, 
         GIRAR RUEDAS RÁPIDAMENTE: SPIN_FAST
     """
-    def get_actions(self, state=None):
+    def get_actions(self, state=None) -> List[str]:
         actions = [self.SPIN_LOW, self.SPIN_FAST]
         if state is None:
             return actions
@@ -74,7 +75,7 @@ class VehicleSlopeV2(MDP):
                     break
         return valid_actions
 
-    def get_transitions(self, state, action):
+    def get_transitions(self, state:str, action:str) -> List[Tuple[str,float]]:
         return self.transitions_dict[(state, action)]
 
     """
@@ -84,25 +85,23 @@ class VehicleSlopeV2(MDP):
         (+100) si llega a la cima y el siguiente estado sigue en la cima
 
     """
-    def get_reward(self, state, action, next_state) -> float:
+    def get_reward(self, state:str, action:str, next_state:str) -> float:
         reward = 0.
         if state == self.TOP and next_state == self.TOP:
-            reward = 100
+            reward = 100.
         else:
-            reward = -1 if action == self.SPIN_LOW else -2
+            reward = -1. if action == self.SPIN_LOW else -2.
         return reward
 
-    """
-    Termina cuando llegamos a la cima
-    """
-    def is_terminal(self, state) -> bool:
+
+    def is_terminal(self, state:str) -> bool:
         return True if state == self.TOP else False
 
     def get_discount_factor(self) -> float:
         return self.discount_factor
 
-    def get_initial_state(self):
+    def get_initial_state(self) -> str:
         return self.initial_state
 
-    def get_goal_states(self):
-        return self.goal_states
+    def get_goal_states(self) -> None:
+        return

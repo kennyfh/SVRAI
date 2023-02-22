@@ -20,6 +20,7 @@ class ModelFreeRL:
         self.qfunction = qfunction
 
     """ Función que ejecuta el algoritmo libre de modelo"""
+    # @timeit
     def execute(self, episodes=100) -> None :
 
         for _ in tqdm(range(episodes), desc="Episodes"):
@@ -47,3 +48,12 @@ class ModelFreeRL:
     """ Obtener el valor de un estado (esto es lo que deberán implementar los diferentes métodos)"""
     def state_value(self, state, action):
         ...
+
+class SARSA(ModelFreeRL):
+    def state_value(self, state, action):
+        return self.qfunction.get_q_value(state, action)
+
+class QLearning(ModelFreeRL):
+    def state_value(self, state, action):
+        (_, max_q_value) = self.qfunction.get_max_q(state, self.model.get_actions(state))
+        return max_q_value
