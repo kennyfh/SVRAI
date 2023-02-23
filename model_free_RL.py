@@ -24,6 +24,7 @@ class ModelFreeRL:
     def execute(self, episodes=100) -> None :
 
         for _ in tqdm(range(episodes), desc="Episodes"):
+
             state = self.model.get_initial_state()
             actions = self.model.get_actions(state)
             action = self.bandit.select(state, actions, self.qfunction)
@@ -49,11 +50,12 @@ class ModelFreeRL:
     def state_value(self, state, action):
         ...
 
-class SARSA(ModelFreeRL):
-    def state_value(self, state, action):
-        return self.qfunction.get_q_value(state, action)
 
 class QLearning(ModelFreeRL):
     def state_value(self, state, action):
         (_, max_q_value) = self.qfunction.get_max_q(state, self.model.get_actions(state))
         return max_q_value
+
+class SARSA(ModelFreeRL):
+    def state_value(self, state, action):
+        return self.qfunction.get_q_value(state, action)

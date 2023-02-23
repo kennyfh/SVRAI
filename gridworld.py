@@ -36,6 +36,12 @@ BLACK = (0, 0, 0)
 CELL_SIZE = 50
 
 class GridWorld(MDP):
+
+    """
+    GridWorld es una clase que representa el entorno del problema del Mundo Malla. En este problema es un entorno discreto
+    que representa la cuadrícula donde un agente debe moverse entre las celdas.
+    
+    """
     
     TERMINAL = ('end', 'end')
     TERMINATE = 'end'
@@ -44,7 +50,6 @@ class GridWorld(MDP):
     LEFT = "LEFT"
     RIGHT = "RIGHT"
 
-    """ Inicio de la clase"""
     def __init__(
         self,
         noise=0.3,
@@ -56,6 +61,20 @@ class GridWorld(MDP):
         initial_state=(0, 0),
         goals=None,
     ) -> None:
+        
+        """
+        Crea una instancia del problema Mundo Malla.
+        
+        Args:
+            noise (float): el ruido que introduce el entorno en la acción del agente. Por defecto es 0.3.
+            width (int): la anchura de la cuadrícula. Por defecto es 10.
+            height (int): la altura de la cuadrícula. Por defecto es 10.
+            discount_factor (float): el factor de descuento que determina la importancia que tiene la recompensa en el futuro. Por defecto es 0.9.
+            blocked_states (List[Tuple[int, int]]): una lista de tuplas que representan las celdas bloqueadas. 
+            action_cost (float): el coste que tiene realizar una acción. Por defecto es 0.0.
+            initial_state (Tuple[int, int]): una tupla que representa la posición inicial del agente. Por defecto es (0, 0).
+            goals (Union[None, List[Tuple[Tuple[int, int], int]]]): una lista de tuplas que representan las posiciones de las celdas objetivo y su recompensa. Por defecto es None.
+        """
 
         self.noise = noise # Ruido
         self.width = width # Dimensionalidad
@@ -79,8 +98,13 @@ class GridWorld(MDP):
         self.action_cost = action_cost
 
 
-    """Conjunto de estados"""    
     def get_states(self) -> List[Union[str, Tuple[int, int]]]:
+        """
+        Devuelve la lista de estados del GridWorld.
+
+        Returns:
+            List[Union[str, Tuple[int, int]]]: Lista de estados.
+        """
 
         states = [self.TERMINAL]
         states += [(x, y) for x in range(self.width)
@@ -88,6 +112,15 @@ class GridWorld(MDP):
         return states
 
     def get_actions(self, state=None) -> List[str]:
+        """
+        Devuelve la lista de acciones posibles para un estado o para cualquier estado.
+
+        Args:
+            state (Tuple[int, int], optional): Estado para el que se quieren conocer las acciones. Si es None, se devuelven las acciones para cualquier estado. Por defecto None.
+
+        Returns:
+            List[str]: Lista de acciones posibles.
+        """
 
         actions = [self.UP, self.DOWN,self.LEFT, self.RIGHT, self.TERMINATE]
         if state is None:
@@ -100,22 +133,41 @@ class GridWorld(MDP):
                     break
         return valid_actions
 
-    def valid_add(self, state, new_state, prob):
+    def valid_add(self, state:Tuple[int, int], new_state:Tuple[int, int], prob:float) -> Tuple[Tuple[int, int], float]:
+        """
+        Añade una transición válida a la lista de transiciones.
+
+        Args:
+            state (Tuple[int, int]): Estado actual.
+            new_state (Tuple[int, int]): Nuevo estado.
+            prob (float): Probabilidad de la transición.
+
+        Returns:
+            Tuple[Tuple[int, int], float]: Nueva transición válida.
+        """
         if prob == 0.0:
             return ()
 
         if new_state in self.blocked_states:
             return (state, prob)
 
-        # Move to the next space if it is not off the grid
         (x, y) = new_state
         if x >= 0 and x < self.width and y >= 0 and y < self.height:
             return ((x, y), prob)
 
-        # If off the grid, state in the same state
         return (state, prob)
 
-    def get_transitions(self, state, action):
+    def get_transitions(self, state:Tuple[int, int], action:str) -> List[Tuple[Union[Tuple[str, int], Tuple[int, int]], float]]:
+        """
+        Devuelve la lista de transiciones posibles para un estado y una acción.
+
+        Args:
+            state (Tuple[int, int]): Estado actual.
+            action (str): Acción a realizar.
+
+        Returns:
+            List[Tuple[Union[Tuple[str, int], Tuple[int, int]], float]]: Lista de transiciones posibles.
+        """
         transitions = []
 
         if state == self.TERMINAL:
@@ -143,21 +195,29 @@ class GridWorld(MDP):
                 #                                ((self.width-1,self.height-1), 1.0)
                                                
                                             #    ])]
-        elif action==self.UP or action ==self.DOWN or action==self.LEFT or action==self.RIGHT:
+        elif action==self.UP or action == self.DOWN or action==self.LEFT or action==self.RIGHT:
             mov =  movements[action]
             transitions += [self.valid_add(state, mov[0], straight),
                             self.valid_add(state, mov[1], self.noise),
                             self.valid_add(state, mov[2], self.noise)]
         return transitions
 
-    """
-        Devuelve una recompensa si el siguiente estado es un terminal y
-        y este estado es una que tiene recompensa. Si no, devuelve el coste de acción que hayamos realizado
-    """
+
     def get_reward(self, 
                   state: Union[Tuple[int, int], Tuple[str, str]],
                   action: str,
                   next_state:Union[Tuple[int, int], Tuple[str, str]]) -> float:
+        """
+        Calcula la recompensa para una transición de estado a estado.
+        
+        Args:
+            state (Union[Tuple[int, int], Tuple[str, str]]): El estado actual.
+            action (str): La acción tomada en el estado actual.
+            next_state (Union[Tuple[int, int], Tuple[str, str]])): El siguiente estado.
+
+        Returns:
+            reward (int): La recompensa obtenida por la transición de estado a estado
+        """
 
         reward = 0.
         if state in self.get_goal_states().keys() and next_state == self.TERMINAL:
@@ -166,17 +226,34 @@ class GridWorld(MDP):
             reward = self.action_cost
         return reward
 
-    """ Si llegamos a un estado terminal devolvemos True"""
-    def is_terminal(self, state) -> bool:
+    def is_terminal(self, state:Union[Tuple[int, int], Tuple[str, str]]) -> bool:
+        """
+        Determina si un estado es un estado terminal.
+
+        Args:
+            state (Union[Tuple[int, int], Tuple[str, str]]): El estado a evaluar.
+
+        Returns:
+            True si el estado es un estado terminal, False en caso contrario.
+        """
         return True if state==self.TERMINAL else False
 
     def get_discount_factor(self) -> float:
+        """
+        Define el factor de descuento
+        """
         return self.discount_factor
 
     def get_initial_state(self) -> Tuple[int,int]:
+        """
+        Define el estado inicial del entorno 
+        """
         return self.initial_state
 
     def get_goal_states(self) -> List[Tuple[int,int]]:
+        """
+        Define el estado terminal del entorno 
+        """
         return self.goal_states
     
     @staticmethod
@@ -187,11 +264,12 @@ class GridWorld(MDP):
         except ModuleNotFoundError:
             return False
     
-    """
-    Función para visualizar el estado inicial, si no se tiene pygame instalado, se printea por
-    consola 
-    """
+    
     def visualise_initial_state(self) -> None:
+        """
+        Función para visualizar el estado inicial, si no se tiene pygame instalado, se printea por
+        consola 
+        """
         if self.pygame_installed:
             pygame.init()
             screen = pygame.display.set_mode((500, 500))
@@ -239,8 +317,11 @@ class GridWorld(MDP):
                 screen.blit(text, text_rect)
 
 
-    """Función que pinta en Pygame la política ya sea con Pygame o por terminal"""        
+           
     def visualise_policy(self,policy) -> None:
+        """
+        Función que pinta en Pygame la política ya sea con Pygame o por terminal
+        """ 
         mov = {self.UP: "↑", self.DOWN: "↓",
                     self.LEFT: "←", self.RIGHT: "→", self.TERMINATE: " "}
         if self.pygame_installed:
@@ -270,11 +351,13 @@ class GridWorld(MDP):
             print(self.policy_to_string(policy))
 
 
-    def policy_to_string(self, policy) -> str:        
+    def policy_to_string(self, policy) -> str:
+        """
+        Dibuja la política del entorno en la terminal
+        """       
         result= "\n "
         mov = {self.UP: "↑", self.DOWN: "↓",
                     self.LEFT: "←", self.RIGHT: "→", self.TERMINATE: " "}
-        # policy_dict = policy.policy_table
         for y in range(self.height - 1, -1, -1):
             for x in range(self.width):
                 # Si el elemento es un obstáculo
@@ -291,6 +374,9 @@ class GridWorld(MDP):
 
 
     def execute(self, state, action):
+        """
+        Ejecuta como si el problema fuera libre de modelo
+        """
         if state in self.goal_states:
             return MDP.execute(self, state=state, action=self.TERMINATE)
 

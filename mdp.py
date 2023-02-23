@@ -1,59 +1,57 @@
-"""
-CLASE QUE PERMITE LA CREACIÓN DE MODELOS DE MARKOV PARA EL PARADIGMA BASADO EN MODELOS
-(aunque se permite el uso de algoritmos libres de modelo)
-"""
-
 import random
 
 
 class MDP:
-
     """
-    CLASE MDP
-
-    * Si algún MDP se quiere hacer uso de algoritmos libres de modelo, los algoritmos descartarán las
-    funciones get_states, get_transitions y get_rewards
-    
+    Clase que permite la creación de Modelos de Markov para el paradigma basado en modelos
+    (aunque también permite el uso de algoritmos libres de modelo).
     """
 
-    """ Devuelve todos los estados del MDP"""
     def get_states(self):
+        """
+        Devuelve una lista con todos los estados posibles del modelo de Markov.
+
+        Returns:
+        states: Una lista de los estados posibles del modelo de Markov.
+        """
         ...
 
-    """ Devolvemos True si llegamos a un estado que finalice"""
     def is_terminal(self, state):
         ...
 
-    """ Devolvemos el factor de descuento """
     def get_discount_factor(self):
         ...
 
-    """ Se devuelve el estados """
     def get_initial_state(self):
         ...
 
-    """ Se devuelve todos los estado objetivo """
     def get_goal_states(self):
         ...
     
-    """ Devuelve todas las acciones de un estado con una probabilidad distinta de nula"""
     def get_actions(self, state):
         ...
 
-    """ Return all non-zero probability transitions for this action
-        from this state, as a list of (state, probability) pairs
-    """
+
     def get_transitions(self, state, action):
         ...
 
-    """ Return the reward for transitioning from state to
-        nextState via action
-    """
+
     def get_reward(self, state, action, next_state):
+        """
+        Devuelve la recompensa asociada a pasar del estado actual al siguiente estado
+        con la acción actual.
+
+        Args:
+            state: El estado actual.
+            action: La acción actual.
+            next_state: El siguiente estado.
+
+        Returns:
+            La recompensa asociada a pasar del estado actual al siguiente estado con la acción actual.
+        """
         ...
 
-    """ Devuelve un nuevo estado y la recompensa. Esto se puede usar para el paradigma
-    de aprendizaje sin modelo."""
+
     def execute(self, state, action):
         rand = random.random()
         cumulative_probability = 0.0

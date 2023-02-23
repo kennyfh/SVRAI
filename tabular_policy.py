@@ -27,7 +27,7 @@ class TabularPolicy(DeterministicPolicy):
         self.policy_table[state] = action
 
     """Método para imprimir la tabla de políticas"""
-    def print_policy_table(self, state_width=8, action_width=13) -> None:
+    def print_policy_table(self, state_width=8, action_width=20) -> None:
         header = f"| {'Estado':<{state_width}} | {'Accion':<{action_width}} |"
         print(f"+{'-' * (len(header) - 2)}+")
         print(header)
