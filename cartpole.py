@@ -11,8 +11,8 @@ class CartPole:
     """
 
     def __init__(self,
-                 buckets=(1, 1, 3, 6)) -> None:
-        self.discount_factor=0.9
+                 buckets=(1, 1, 6, 3)) -> None:
+        self.discount_factor= .9  #0.9
         self.gravity = 9.8
         self.masscart = 1.0
         self.masspole = 0.1
@@ -22,16 +22,15 @@ class CartPole:
         self.force_mag = 10.0
         self.tau = 0.02
 
-        # Rangos donde puede fallar el problema
-        self.theta_threshold = 12 * 2 * math.pi
-        self.x_threshold = 2.4
-
         # https://eprints.ucm.es/id/eprint/56648/1/1138035127-327684_JUAN_RAM%C3%93N_DEL_CA%C3%91O_VEGA_Aprendizaje_por_refuerzo_profundo_aplicado_a_juegos_sencillos_3940146_998640412.pdf
         self.buckets = buckets
 
         # Limites: [Posición del carro, Velocidad del carro, Ángulo del poste, Velocidad angular del poste]
-        self.upper_bounds = [4.8, 0.5, .418, math.radians(50)]
-        self.lower_bounds = [-4.8, -0.5, -.418,-math.radians(50)]
+        self.upper_bounds = [4.8, 0.5, math.radians(24), math.radians(50)]
+        self.lower_bounds = [-4.8, -0.5, math.radians(-24), -math.radians(50)]
+
+        self.state_value_bounds = list(zip(self.lower_bounds,self.upper_bounds))
+
 
         self.steps_beyond_terminated = None
     
@@ -74,20 +73,27 @@ class CartPole:
             no se encuentra dentro de los límites laterales y False en caso contrario
         """
         x, _, theta, _ = state
-        return x < -self.x_threshold or x > self.x_threshold \
-            or theta < -self.theta_threshold or theta > self.theta_threshold
-    
+        return (x < -1) or (x > 1) or (theta < 3) or (theta > 4) # Si dividimos el rango theta [-24,24] en 6 buckets
+                                                                 # Los que estén fuera del 3,4 están fuera de los límites permitidos
+                                                                 # (0-indexing)
 
-
-    def discretize_state(self,state):
-        """
-        Discretización del estado según un tipo de bucket
-        """
-        ratios = [(state[i] + self.upper_bounds[i]) / (self.upper_bounds[i] - self.lower_bounds[i]) for i in range(len(state))]
-        classified_state = [int(round((self.buckets[i] - 1) * ratios[i])) for i in range(len(state))]
-        classified_state = [min(self.buckets[i] - 1, max(0, classified_state[i])) for i in range(len(state))]
-
-        return tuple(classified_state)
+    # https://arxiv.org/abs/2006.04938
+    def discretize_state(self,state_value) -> List[int]:
+        bucket_indices = []
+        for i in range(len(state_value)):
+            if state_value[i] <= self.state_value_bounds[i][0]:
+                bucket_index = 0
+            elif state_value[i] >= self.state_value_bounds[i][1]:
+                bucket_index = self.buckets[i] - 1
+            else:
+                bound_width = self.state_value_bounds[i][1] - \
+                self.state_value_bounds[i][0]
+                offset = (self.buckets[i]-1) * \
+                self.state_value_bounds[i][0] / bound_width
+                scaling = (self.buckets[i]-1) / bound_width
+                bucket_index = int(round(scaling*state_value[i] -offset))
+            bucket_indices.append(bucket_index)
+        return(tuple(bucket_indices))
 
 
     def execute(self,state,action:int):
@@ -101,9 +107,12 @@ class CartPole:
             Una tupla que contiene el siguiente estado y la recompensa.
         """
         x, x_dot, theta, theta_dot = state
+
+
         force = self.force_mag if action == 1 else -self.force_mag
         costheta = math.cos(theta)
         sintheta = math.sin(theta)
+
         temp = (force + self.polemass_length * theta_dot**2 * sintheta) / self.total_mass
         thetaacc = (self.gravity * sintheta - costheta * temp) / (self.length * (4.0 / 3.0 - self.masspole * costheta**2 / self.total_mass))
         xacc = temp - self.polemass_length * thetaacc * costheta / self.total_mass
@@ -116,16 +125,15 @@ class CartPole:
 
         next_state = self.discretize_state((x,x_dot,theta,theta_dot))
 
-        if not self.is_terminal(next_state):
-            reward =1.
-        elif self.steps_beyond_terminated is None:
-            self.steps_beyond_terminated = 0
-            reward = 1.
+        # if abs(theta) < 0.1:
+        #     reward = 1
+        # else:
+        #     reward = -1
+        if self.is_terminal(next_state):
+            reward = 0
         else:
-            if self.steps_beyond_terminated ==0:
-                print("No deberías volver porqu8e ya has llegado a un estado terminal")
-            self.steps_beyond_terminated += 1
-            reward = 0.0
+            reward=1
+
 
         return next_state, reward
 

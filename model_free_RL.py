@@ -20,17 +20,18 @@ class ModelFreeRL:
         self.qfunction = qfunction
 
     """ Función que ejecuta el algoritmo libre de modelo"""
-    # @timeit
+
     def execute(self, episodes=100) -> None :
 
-        for _ in tqdm(range(episodes), desc="Episodes"):
+        for i in tqdm(range(episodes), desc="Episodes"):
 
             state = self.model.get_initial_state()
             actions = self.model.get_actions(state)
             action = self.bandit.select(state, actions, self.qfunction)
+            reward_acc = 0
 
             while not self.model.is_terminal(state):
-                (next_state, reward) = self.model.execute(state, action)
+                next_state, reward = self.model.execute(state, action)
                 actions = self.model.get_actions(next_state)
                 next_action = self.bandit.select(next_state, actions, self.qfunction)
                 q_value = self.qfunction.get_q_value(state, action)
@@ -38,6 +39,9 @@ class ModelFreeRL:
                 self.qfunction.update(state, action, delta)
                 state = next_state
                 action = next_action
+                reward_acc += reward
+            
+            print(f"Episodio {i} | Estado {state} | Score {int(reward_acc)}")
 
     """ Calcular el delta para la actualización """
 
