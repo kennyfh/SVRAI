@@ -1,8 +1,7 @@
 from tqdm import tqdm
 
 """
-CLASE QUE IMPLEMENTA LOS COMPONENTES NECESARIOS PARA EJECUTAR MÉTODOS
-LIBRES DE MODELO
+Marco genérico para algoritmos de aprendizaje por refuerzo libres de modelo
 """
 
 class ModelFreeRL:
@@ -12,25 +11,28 @@ class ModelFreeRL:
                  model, 
                  bandit, 
                  qfunction, 
-                 alpha=0.1) -> None :
+                 alpha=0.1,
+                 print_params=False) -> None :
         
         self.model = model # Nuestro problema modelado
         self.bandit = bandit # Estrategia para aprender una política
         self.alpha = alpha # Nuestro factor de aprendizaje
         self.qfunction = qfunction
 
+        self.print_params = print_params
+
     """ Función que ejecuta el algoritmo libre de modelo"""
 
     def execute(self, episodes=100) -> None :
 
-        for i in tqdm(range(episodes), desc="Episodes"):
-
+        for _ in tqdm(range(episodes), desc="Episodes"):
+            # Conseguimos el estado inicial
             state = self.model.get_initial_state()
             actions = self.model.get_actions(state)
+            # Elegimos la acción
             action = self.bandit.select(state, actions, self.qfunction)
-            reward_acc = 0
 
-            while not self.model.is_terminal(state):
+            while (not self.model.is_terminal(state)):
                 next_state, reward = self.model.execute(state, action)
                 actions = self.model.get_actions(next_state)
                 next_action = self.bandit.select(next_state, actions, self.qfunction)
@@ -39,10 +41,16 @@ class ModelFreeRL:
                 self.qfunction.update(state, action, delta)
                 state = next_state
                 action = next_action
-                reward_acc += reward
-            
-            print(f"Episodio {i} | Estado {state} | Score {int(reward_acc)}")
 
+            if self.print_params:
+                # Imprimimos parámetros importantes
+                print(f"Episodio número: {episodes}")
+                print(f"Acción seleccionada: {str(action)}")
+                print(f"Estado actual: {str(state)}")
+                print(f"Recompensa ganada: {str(reward)}")            
+                print("===========================================")
+
+            
     """ Calcular el delta para la actualización """
 
     def get_delta(self, reward, q_value, state, next_state, next_action):

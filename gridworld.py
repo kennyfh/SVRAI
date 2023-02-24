@@ -317,7 +317,7 @@ class GridWorld(MDP):
                 screen.blit(text, text_rect)
 
 
-           
+    # TODO: adaptar       
     def visualise_policy(self,policy) -> None:
         """
         Función que pinta en Pygame la política ya sea con Pygame o por terminal
