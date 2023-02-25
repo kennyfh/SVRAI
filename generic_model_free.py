@@ -4,7 +4,7 @@ from tqdm import tqdm
 Marco genérico para algoritmos de aprendizaje por refuerzo libres de modelo
 """
 
-class ModelFreeRL:
+class GenericModelFreeRL:
 
     """ Parámetros iniciales"""
     def __init__(self, 
@@ -63,11 +63,11 @@ class ModelFreeRL:
         ...
 
 
-class QLearning(ModelFreeRL):
+class QLearning(GenericModelFreeRL):
     def state_value(self, state, action):
         (_, max_q_value) = self.qfunction.get_max_q(state, self.model.get_actions(state))
         return max_q_value
 
-class SARSA(ModelFreeRL):
+class SARSA(GenericModelFreeRL):
     def state_value(self, state, action):
         return self.qfunction.get_q_value(state, action)
