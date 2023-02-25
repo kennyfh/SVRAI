@@ -31,13 +31,22 @@ relativamente pequeño.
 class EpsilonGreedy(MultiArmedBandit):
 
     def __init__(self, epsilon=0.1) -> None:
-        self.epsilon = epsilon
+        self._epsilon = epsilon
+
+    @property
+    def epsilon(self):
+        return self._epsilon
+
+    @epsilon.setter
+    def epsilon(self, value):
+        if value < 0 or value > 1:
+            raise ValueError("El valor de epsilon debe estar entre 0 and 1.")
+        self._epsilon = value
 
     def reset(self):
-        pass
+        ...
 
     def select(self, state, actions, qfunction):
-        # Select a random action with epsilon probability
         if random.random() < self.epsilon:
             return random.choice(actions)
         (arg_max_q, _) = qfunction.get_max_q(state, actions)
