@@ -11,8 +11,7 @@ class CartPole:
     Clase que establece los parámetros necesarios para simular el problema CartPole.
     """
 
-    def __init__(self,
-                 buckets=(1, 1, 6, 3)) -> None:
+    def __init__(self) -> None:
         """
         Inicialización de la clase
         """
@@ -66,7 +65,7 @@ class CartPole:
             action (int): Un valor entero que representa la acción que se va a ejecutar.
 
         Returns:
-            Una tupla que contiene el siguiente estado y la recompensa.
+            Una tupla que contiene el siguiente estado, la recompensa y la condición si ha llegado a un estado terminal
         """
         x, x_dot, theta, theta_dot = self.state
         force = self.force_mag if action == 1 else -self.force_mag
@@ -112,7 +111,8 @@ class QLearningCartPole:
                  model, 
                  bandit, 
                  qfunction, 
-                 alpha=0.1) -> None :
+                 alpha=0.1,
+                 buckets=(1,1,6,3)) -> None :
         
         """ 
         Parámetros iniciales
@@ -122,7 +122,7 @@ class QLearningCartPole:
         self.bandit = bandit # Estrategia para aprender una política
         self.alpha = alpha # Nuestro factor de aprendizaje
         self.qfunction = qfunction
-        self.buckets = (1,1,6,3)
+        self.buckets = buckets
 
         # Limites: [Posición del carro, Velocidad del carro, Ángulo del poste, Velocidad angular del poste]
         self.upper_bounds = [4.8, 0.5, math.radians(24), math.radians(50)]
@@ -212,10 +212,3 @@ class QLearningCartPole:
     def state_value(self, state, action):
         (_, max_q_value) = self.qfunction.get_max_q(state, self.model.get_actions(state))
         return max_q_value
-
-# if __name__ == "__main__":
-#     from qtable import QTable
-#     from multi_armed_bandit import EpsilonGreedy
-#     cartpole = CartPole()
-#     qfunction = QTable()
-#     QLearningCartPole(cartpole, EpsilonGreedy(), qfunction).execute(episodes=1000)

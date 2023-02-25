@@ -1,3 +1,4 @@
+from tqdm import tqdm
 from tabular_value_function import *
 from qtable import *
 
@@ -9,13 +10,14 @@ class ValueIteration:
 
     def value_iteration(self, max_iterations=100, theta=0.001):
 
-        for i in range(max_iterations):
+        # for i in range(max_iterations):
+        for i in tqdm(range(max_iterations), desc="Interaciones"):
             delta = 0.0
             new_values = TabularValueFunction()
             for state in self.mdp.get_states():
                 qtable = QTable()
                 for action in self.mdp.get_actions(state):
-                    # Calculate the value of Q(s,a)
+                    # Calculamos el valor de Q(s,a)
                     new_value = 0.0
                     for (new_state, probability) in self.mdp.get_transitions(
                         state, action

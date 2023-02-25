@@ -105,12 +105,20 @@ class VehicleSlopeV1(MDP):
 
         Returns:
             float: Recompensa recibida por tomar la acción en el estado actual y llegar al siguiente estado.
-
-            - 
         """
-        reward = 0.
-        if state == self.MEDIUM or state == self.HIGH:
-            reward = 3.
+        # Calcular la energía ganada en el estado siguiente
+        if next_state == self.HIGH or next_state == self.MEDIUM:
+            energy_gain = 3
+        else:
+            energy_gain = 0
+
+        if action == self.SPIN:
+            energy_cost = 1
+        else:
+            energy_cost = 0
+
+        reward = energy_gain - energy_cost
+
         return reward
 
     def is_terminal(self, state) -> bool:
@@ -141,14 +149,8 @@ class VehicleSlopeV1(MDP):
         Returns:
             str: El estado inicial.
         """
-        return random.choice(self.LOW,self.MEDIUM,self.HIGH)
-
-    def get_goal_states(self) -> None:
-        """
-        Obtiene los estados objetivo (en este caso ninguno)
-        """
-        return
-    
+        # return random.choice(self.LOW,self.MEDIUM,self.HIGH)
+        return random.choice(self.LOW,self.MEDIUM)    
 
     def print_value_function(self,valuef) -> None :
         """
@@ -195,7 +197,7 @@ class VehicleSlopeV2(MDP):
 
     
     def __init__(self,
-                 discount_factor:float=0.8, # Factor de descuento
+                 discount_factor:float=1., # Factor de descuento
                  initial_state:str="LOW" # Estado inicial
                  ) -> None:
         """
@@ -277,14 +279,16 @@ class VehicleSlopeV2(MDP):
 
         Returns:
             float: Recompensa recibida por tomar la acción en el estado actual y llegar al siguiente estado.
-                - Si el siguiente estado es la cima (TOP) y la acción lleva a permanecer en la cima, la recompensa es de 100. 
+                - Si el siguiente estado es la cima (TOP) y permanece en la cima, la recompensa es de 0. 
                 - Si la acción es girar las ruedas lentamente (SPIN_LOW), la recompensa es de -1. 
                 - Si la acción es girar las ruedas rápidamente (SPIN_FAST), la recompensa es de -2.
         """
-        reward = 0.
-        if state == self.TOP and next_state == self.TOP:
-            reward = 100.
+        if next_state == self.TOP:
+            # Ha llegado a la cima y como ha cumplido el objetivo, le damos una recompensa de 0.
+            reward = 0.
         else:
+            #En cambio, dependiendo de la acción, penalizamos el consumo de energía
+            # para motivar a que el vehículo tome acciones que consuman menos energía en general.
             reward = -1. if action == self.SPIN_LOW else -2.
         return reward
 
@@ -310,17 +314,6 @@ class VehicleSlopeV2(MDP):
             float: El factor de descuento.
         """
         return self.discount_factor
-
-
-    
-    def get_goal_states(self) -> None:
-        """
-        Obtiene los estados objetivo (en este caso, solo hay uno, la cima).
-
-        Returns:
-            None
-        """
-        return
     
     def print_value_function(self,valuef) -> None :
         """

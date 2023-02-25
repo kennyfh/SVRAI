@@ -13,6 +13,7 @@ Con este proyecto, esperamos aplicar los conocimientos adquiridos en la asignatu
 - [Python](https://www.python.org/) (versión >= 3.6 recomendada) <!-- F-strings https://peps.python.org/pep-0498/ -->
 - [Pygame](https://www.pygame.org/)
 - [Jupyter notebook](https://jupyter.org/install)
+- [TQDM](https://github.com/tqdm/tqdm)
 
 ### Instalación
 

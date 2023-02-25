@@ -20,7 +20,7 @@ class MultiArmedBandit():
 
 
 """
-Epsilon-Greedy es una estrategia que selecciona la acción conocida
+Exploración ϵ-voraz (Epsilon-Greedy) es una estrategia que selecciona la acción conocida
 con una probabilidad (1-epsilon) y una opción aleatoria epsion. Esto
 nos permite explorar nuevas opciones con cierta frecuencia.
 

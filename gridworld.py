@@ -23,8 +23,7 @@
 import sys
 import numpy as np
 import pygame
-from mdp import *
-import random
+from mdp import *   
 from typing import List, Union, Tuple
 
 # COLORES PARA PYGAME
@@ -56,7 +55,7 @@ class GridWorld(MDP):
         width=10,
         height=10,
         discount_factor=0.9,
-        blocked_states=[],
+        # blocked_states=[],
         action_cost=0.0,
         initial_state=(0, 0),
         goals=None,
@@ -91,8 +90,9 @@ class GridWorld(MDP):
         else:
             self.goal_states = dict(goals)
         
-        # Obstáculos: en nuestro problema no tenemos ningún obstáculo, pero podemos añadir algunos por experimentación
-        self.blocked_states = blocked_states
+        self.state_set = [(x, y) for x in range(self.width) for y in range(self.height)]
+        outside_coords = [(x, y) for x in range(-1, self.width+1) for y in range(-1, self.height+1) if (x,y) not in self.state_set]
+        self.blocked_states = sorted(list(set(outside_coords)))
 
         # Coste de accion
         self.action_cost = action_cost
@@ -107,8 +107,10 @@ class GridWorld(MDP):
         """
 
         states = [self.TERMINAL]
-        states += [(x, y) for x in range(self.width)
-                   for y in range(self.height) if (x,y) not in self.blocked_states]
+        # states += [(x, y) for x in range(self.width)
+        #            for y in range(self.height) if (x,y) not in self.blocked_states]
+        states += self.state_set
+
         return states
 
     def get_actions(self, state=None) -> List[str]:
@@ -127,7 +129,7 @@ class GridWorld(MDP):
             return actions
         valid_actions = []
         for a in actions:
-            for (new_state, prob) in self.get_transitions(state,a):
+            for (_, prob) in self.get_transitions(state,a):
                 if prob > 0:
                     valid_actions.append(a)
                     break
@@ -188,13 +190,7 @@ class GridWorld(MDP):
         if state in self.get_goal_states().keys():
             if action == self.TERMINATE:
                 transitions += [(self.TERMINAL, 1.0)]
-                # transitions += [random.choice([(self.TERMINAL, 1.0),
-                #                                ((0,0), 1.0),
-                #                                ((self.height-1,0), 1.0),
-                #                                ((self.width-1,0), 1.0),
-                #                                ((self.width-1,self.height-1), 1.0)
-                                               
-                                            #    ])]
+
         elif action==self.UP or action == self.DOWN or action==self.LEFT or action==self.RIGHT:
             mov =  movements[action]
             transitions += [self.valid_add(state, mov[0], straight),
@@ -222,6 +218,8 @@ class GridWorld(MDP):
         reward = 0.
         if state in self.get_goal_states().keys() and next_state == self.TERMINAL:
             reward = self.get_goal_states().get(state)
+        elif next_state in self.blocked_states:
+            reward=-1.    
         else:
             reward = self.action_cost
         return reward
@@ -295,10 +293,8 @@ class GridWorld(MDP):
                         pygame.quit()
                         sys.exit()
                 pygame.display.update()
-
-
         else:
-            print("Tienes que tener instalado Pygame")
+            raise ModuleNotFoundError("Tienes que tener instalado Pygame")
 
 
     def draw_cell(self,screen, x, y, color, arrow) -> None:
@@ -316,8 +312,7 @@ class GridWorld(MDP):
                 text_rect = text.get_rect(center=rect.center)
                 screen.blit(text, text_rect)
 
-
-    # TODO: adaptar       
+     
     def visualise_policy(self,policy) -> None:
         """
         Función que pinta en Pygame la política ya sea con Pygame o por terminal
@@ -360,11 +355,11 @@ class GridWorld(MDP):
                     self.LEFT: "←", self.RIGHT: "→", self.TERMINATE: " "}
         for y in range(self.height - 1, -1, -1):
             for x in range(self.width):
-                # Si el elemento es un obstáculo
-                if (x,y) in self.blocked_states:
-                    result += " | ##"
+                # # Si el elemento es un obstáculo
+                # if (x,y) in self.blocked_states:
+                #     result += " | ##"
                 # Si el elemento es una recompensa
-                elif policy.select_action((x, y)) == self.TERMINATE:
+                if policy.select_action((x, y)) == self.TERMINATE:
                     result += f" | {self.goal_states[(x, y)]} "
                 # Si es otro
                 else:
