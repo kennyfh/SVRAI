@@ -2,6 +2,8 @@ from tqdm import tqdm
 
 """
 Marco genérico para algoritmos de aprendizaje por refuerzo libres de modelo
+Para problemas más específicos, puedes copiar esta clase para tener una base de
+como realizar tu algoritmo libre de modelo.
 """
 
 class GenericModelFreeRL:

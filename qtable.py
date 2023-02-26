@@ -1,6 +1,9 @@
 from collections import defaultdict
 from qfunction import QFunction
 
+"""
+Clase que crea la Q-tabla
+"""
 
 class QTable(QFunction):
     def __init__(self, default=0.0) -> None:
