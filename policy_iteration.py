@@ -36,8 +36,8 @@ class PolicyIteration:
         # Crea una función tabular para mantener los detalles
         values = TabularValueFunction()
 
-        # for i in range(1, max_iterations + 1):
-        for i in tqdm(range(1, max_iterations + 1), desc="Interaciones"):
+        for i in range(1, max_iterations + 1):
+        # for i in tqdm(range(1, max_iterations + 1), desc="Interaciones"):
             policy_changed = False
             values = self.policy_evaluation(self.policy, values, theta)
 

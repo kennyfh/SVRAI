@@ -8,12 +8,12 @@ que pretenden aprender una política que minimice el arrepentimiento total
 """
 class MultiArmedBandit():
 
-    """ Select an action for this state given from a list given a Q-function """
+    """ Seleccionamos una acción a partir de una lista de acciones"""
 
     def select(self, state, actions, qfunction):
         ...
 
-    """ Reset a multi-armed bandit to its initial configuration """
+    """ Reseteamos la esrategia al valor inicial"""
 
     def reset(self):
         self.__init__()
@@ -49,7 +49,7 @@ class EpsilonGreedy(MultiArmedBandit):
     def select(self, state, actions, qfunction):
         if random.random() < self.epsilon:
             return random.choice(actions)
-        (arg_max_q, _) = qfunction.get_max_q(state, actions)
+        arg_max_q, _ = qfunction.get_max_q(state, actions)
         return arg_max_q
     
 """
@@ -65,7 +65,6 @@ class Softmax(MultiArmedBandit):
 
     def select(self, state, actions, qfunction):
 
-        # calculate the denominator for the softmax strategy
         total = 0.0
         for action in actions:
             total += math.exp(qfunction.get_q_value(state, action) / self.tau)

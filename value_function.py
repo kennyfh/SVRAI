@@ -11,7 +11,7 @@ class ValueFunction():
     def get_value(self, state):
         ...
 
-    """ Return the Q-value of action in state """
+    """Devolver el valor de q por la acción del estado"""
     def get_q_value(self, model, state, action):
         q_value = 0.0
         for (new_state, probability) in model.get_transitions(state, action):
@@ -22,18 +22,15 @@ class ValueFunction():
             )
 
         return q_value
-
-    """ Return a policy from this value function """
-
+    
+    """Devolver una política de esta función de valor"""
     def extract_policy(self, model):
         policy = TabularPolicy()
         for state in model.get_states():
             max_q = float("-inf")
             for action in model.get_actions(state):
                 q_value = self.get_q_value(model, state, action)
-
-                # If this is the maximum Q-value so far,
-                # set the policy for this state
+                
                 if q_value > max_q:
                     policy.update(state, action)
                     max_q = q_value

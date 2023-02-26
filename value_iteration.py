@@ -10,8 +10,8 @@ class ValueIteration:
 
     def value_iteration(self, max_iterations=100, theta=0.001):
 
-        # for i in range(max_iterations):
-        for i in tqdm(range(max_iterations), desc="Interaciones"):
+        for i in range(max_iterations):
+        # for i in tqdm(range(max_iterations), desc="Interaciones"):
             delta = 0.0
             new_values = TabularValueFunction()
             for state in self.mdp.get_states():

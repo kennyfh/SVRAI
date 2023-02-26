@@ -2,6 +2,7 @@ import math
 import random
 import time
 from typing import List, Tuple
+from matplotlib import pyplot as plt
 
 import numpy as np
 
@@ -22,10 +23,7 @@ class MountainCar:
         self.discount_factor=0.9 # Factor de descuento
         self.state = None
 
-        self.upper_bounds = [self.max_x,self.max_v]
-        self.lower_bounds = [self.min_x,-self.max_v]
-
-    def get_initial_state(self):
+    def get_initial_state(self) -> Tuple[float,float]:
         """
         Devuelve el estado inicial del problema.
 
@@ -65,33 +63,30 @@ class MountainCar:
         Returns:
             Una tupla con el siguiente estado,la recompensa obtenida y condición si ha terminado
         """
-        # Posición actual del carro, velocidad
-        x_act,v_act = self.state
+        x_old, v_old = self.state
 
-        # Cálculo de pos y velocidad siguiente
-        v_new = v_act + (0.001*action) - (0.0025*math.cos(3*x_act))
-        # Recortamos la velocidad para que no se pase del intervalo
-        v_new = max(-self.max_v, min(v_new, self.max_v))
-        # X' <- x + v'
-        x_new = x_act + v_new
-        x_new = max(self.min_x, min(x_new,self.min_x))
-        if x_new == self.min_x and v_new < 0:
-            v_new = 0
-
-        self.state = (x_new,v_new)
-        cond = x_new >= .6 and v_new >=0
         reward = -1.
+        cond = True if x_old >= self.max_x else False
+
+        # Cambiados a un estado nuevo
+        v = v_old + 0.001 * action - 0.0025 * np.cos(3*x_old)
+        v = np.clip(v, -self.max_v, self.max_v)
+        x = x_old + v
+        x = np.clip(x,self.min_x,self.max_x)
+
+        self.state = (x,v)
 
         return self.state, reward, cond
 
-class QLearningMountainCar:
+class ModelFreeMountainCar:
 
     
     def __init__(self, 
                  model, 
                  bandit, 
                  qfunction, 
-                 alpha=0.1) -> None :
+                 alpha=0.1,
+                 print_info=False) -> None :
         """ 
         Parámetros iniciales
         """
@@ -100,60 +95,90 @@ class QLearningMountainCar:
         self.bandit = bandit # Estrategia para aprender una política
         self.alpha = alpha # Nuestro factor de aprendizaje
         self.qfunction = qfunction
+        self.INFO= print_info
 
-        self.x_space = np.linspace(-1.2, 0.6, 12)
-        self.v_space = np.linspace(-0.07, 0.07, 20)
+        self.x_space = np.linspace(-1.2, 0.6, 28)
+        self.v_space = np.linspace(-0.07, 0.07, 18)
+
+        self.epsilon = 1.
 
     # https://link.springer.com/chapter/10.1007/978-3-031-21743-2_12
-    def discretize_state(self,state):
+    def discretize_state(self,state:Tuple[float,float]) -> Tuple[int,int]:
         pos, vel =  state
         pos_bin = int(np.digitize(pos, self.x_space))
         vel_bin = int(np.digitize(vel, self.v_space))
         return (pos_bin, vel_bin)
 
 
-    """ Función que ejecuta el algoritmo libre de modelo"""
 
     def execute(self, episodes=100) -> None :
+        """
+        Función que ejecuta el algoritmo libre de modelo
+        """
+        score = 0
+        total_score = np.zeros(episodes)
+        explore_rate_per_episode=[]
         for episode in range(episodes):
+
+            self.bandit.epsilon = self.epsilon
+            explore_rate_per_episode.append(self.epsilon)
 
             # Conseguimos el estado inicial
             state = self.discretize_state(self.model.get_initial_state())
             done = False
 
+            # Para ir viendo como evolucionan los episodios
+            if episode % 100 == 0:
+                print(f'episode: {episode}, score: {score}, epsilon: {self.epsilon:0.3f}')
+
+            score = 0
+
             while not done:
                 # Elegimos la acción
-                actions = self.model.get_actions(state)
-                action = self.bandit.select(state, actions, self.qfunction)
+                action = self.bandit.select(state, [-1,0,1], self.qfunction)
     
                 # Calculamos el siguiente estado, recompensa y si ha finalizado
-                next_state, reward, done = self.model.execute(action)
-                next_state = self.discretize_state(next_state)
+                observation, reward, done = self.model.execute(action)
+                next_state = self.discretize_state(observation)
+                score += reward
                 
                 # Calculamos el Q-Value
-                actions = self.model.get_actions(next_state)
-                next_action = self.bandit.select(next_state, actions, self.qfunction)
+                # Obtenemos nueva acción
+                next_action = self.bandit.select(next_state, [-1,0,1], self.qfunction)
                 q_value = self.qfunction.get_q_value(state, action)
                 
                 # Actualizamos la tabla
-                delta = self.get_delta(reward, q_value, state, next_state, next_action)
+                delta = self.get_delta(reward, q_value, state, next_state, next_action) # α*(r + γmax Q(s',a') - Q(s,a))
+                #  Q(s,a) ← Q(s,a) + α*(r + γmax Q(s',a') - Q(s,a))
                 self.qfunction.update(state, action, delta)
 
-                # Parámetros importantes
-                print(f"Episodio número: {episode+1}")
-                print(f"Acción seleccionada: {str(action)}")
-                print(f"Estado actual: {str(state)}")
-                print(f"Recompensa ganada: {str(reward)}")            
-                print("===========================================")
+                # # Parámetros importantes
+                if self.INFO:
+                    print(f"Episodio número: {episode+1}")
+                    print(f"Acción seleccionada: {str(action)}")
+                    print(f"Estado actual: {str(state)}")
+                    print(f"Recompensa ganada: {str(reward)}")            
+                    print("===========================================")
 
                 time.sleep(0.03)
 
-                if done:
-                    print("Lo hemos LOGRADO")
-                    break
+                # Nuevo estado
                 state = next_state
                 action = next_action
+                
+            # Save score for this episode
+            total_score[episode] = score
+            # Reduce epsilon 
+            self.epsilon = self.epsilon - 2/episodes if self.epsilon > 0.01 else 0.01
 
+        # Graficamos los datos
+        fig, axs = plt.subplots(2, figsize=(10, 10))
+        fig.suptitle("Resultados del entrenamiento")
+        axs[0].plot(total_score)
+        axs[0].set_ylabel('Recompensa por episodio')
+        axs[1].plot(explore_rate_per_episode)
+        axs[1].set(xlabel='Episodios', ylabel='Tasa de exploración (epsilon)')
+        plt.show()
             
     """ Calcular el delta para la actualización """
 
@@ -164,9 +189,15 @@ class QLearningMountainCar:
 
     """ Obtener el valor de un estado (esto es lo que deberán implementar los diferentes métodos)"""
     def state_value(self, state, action):
-        (_, max_q_value) = self.qfunction.get_max_q(state, self.model.get_actions(state))
+        ...
+
+class QLearningMountainCar(ModelFreeMountainCar):
+    def state_value(self, state, action):
+        (_, max_q_value) = self.qfunction.get_max_q(
+            state, self.model.get_actions(state))
         return max_q_value
 
 
-
-    
+class SARSAMountainCar(ModelFreeMountainCar):
+    def state_value(self, state, action):
+        return self.qfunction.get_q_value(state, action)
