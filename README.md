@@ -2,7 +2,8 @@
 
 El objetivo de este proyecto es resolver algunos [problemas básicos propuestos](https://www.cs.us.es/~fsancho/Cursos/SVRAI/Ejercicios.md.html) por el profesor utilizando algoritmos de Aprendizaje por Refuerzo.
 
-Para lograr este objetivo, hemos utilizado las notas del curso [COMP90054: Reinforcement Learning](https://gibberblot.github.io/rl-notes/intro.html) de la Universidad de Melbourne como guía y se han añadido algunas funcionalidades para resolver nuestros ejercicios.
+Para lograr este objetivo, hemos utilizado las notas del curso de [Aprendizaje por Refuerzo](https://gibberblot.github.io/rl-notes/), ofrecido por el profesor Tim Miller, exprofesor de la Universidad de Melbourne y actual profesor en la Universidad de Queensland, como guía. Además, se han añadido algunas funcionalidades para resolver nuestros ejercicios.
+
 
 Con este proyecto, esperamos aplicar los conocimientos adquiridos en la asignatura y explorar las posibilidades que ofrece el Aprendizaje por Refuerzo en la resolución de problemas prácticos.
 
